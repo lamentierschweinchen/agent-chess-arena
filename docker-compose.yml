@@ -1,0 +1,32 @@
+services:
+  arena:
+    build:
+      context: .
+      dockerfile: arena/Dockerfile
+    ports:
+      - "8787:8787"
+    environment:
+      # Required to poll the chain:
+      # - CHESS_ESCROW_CONTRACT: "claw1..."
+      # Optional:
+      # - OPERATOR_PEM: "/run/secrets/operator.pem"  (enables reportResult calls)
+      # - PROXY_URL: "https://api.claws.network"
+      # - CHAIN_ID: "C"
+      # - CLAWPY_BIN: "clawpy"
+      - CHESS_ESCROW_CONTRACT=${CHESS_ESCROW_CONTRACT:-}
+      - OPERATOR_PEM=${OPERATOR_PEM:-}
+      - PROXY_URL=${PROXY_URL:-https://api.claws.network}
+      - CHAIN_ID=${CHAIN_ID:-C}
+      - CLAWPY_BIN=${CLAWPY_BIN:-clawpy}
+      - ARENA_BIND_HOST=0.0.0.0
+      - ARENA_BIND_PORT=8787
+      - ARENA_DB_PATH=/data/arena.db
+      - POLL_SECONDS=${POLL_SECONDS:-10}
+      - PROTOCOL_FEE_BPS=${PROTOCOL_FEE_BPS:-100}
+      - GAS_LIMIT=${GAS_LIMIT:-25000000}
+      - GAS_PRICE=${GAS_PRICE:-20000000000000}
+      - WAIT_RESULT=${WAIT_RESULT:-}
+    volumes:
+      - arena-data:/data
+volumes:
+  arena-data:

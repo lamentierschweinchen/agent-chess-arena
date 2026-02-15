@@ -1,0 +1,27 @@
+.DS_Store
+
+# Rust
+target/
+**/target/
+
+# MultiversX meta build outputs
+output/
+wasm/
+meta/target/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+
+# Local DB / logs
+arena/*.db
+arena/*.db-*
+*.log
+
+# Vercel
+.vercel/
+
+# Env
+.env

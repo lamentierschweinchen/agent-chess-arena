@@ -1,0 +1,914 @@
+{
+    "buildInfo": {
+        "rustc": {
+            "version": "1.93.0",
+            "commitHash": "254b59607d4417e9dffbc307138ae5c86280fe4c",
+            "commitDate": "2026-01-19",
+            "channel": "Stable",
+            "short": "rustc 1.93.0 (254b59607 2026-01-19)"
+        },
+        "contractCrate": {
+            "name": "agent-chess-arena",
+            "version": "0.1.0"
+        },
+        "framework": {
+            "name": "multiversx-sc",
+            "version": "0.54.6"
+        }
+    },
+    "name": "AgentChessArena",
+    "constructor": {
+        "inputs": [
+            {
+                "name": "operator",
+                "type": "Address"
+            },
+            {
+                "name": "treasury",
+                "type": "Address"
+            },
+            {
+                "name": "protocol_fee_bps",
+                "type": "u64"
+            },
+            {
+                "name": "max_base_time_seconds",
+                "type": "u64"
+            },
+            {
+                "name": "min_black_time_seconds",
+                "type": "u64"
+            },
+            {
+                "name": "max_black_time_seconds",
+                "type": "u64"
+            },
+            {
+                "name": "join_timeout_seconds",
+                "type": "u64"
+            },
+            {
+                "name": "commit_phase_seconds",
+                "type": "u64"
+            },
+            {
+                "name": "reveal_phase_seconds",
+                "type": "u64"
+            },
+            {
+                "name": "slack_seconds",
+                "type": "u64"
+            }
+        ],
+        "outputs": []
+    },
+    "upgradeConstructor": {
+        "inputs": [],
+        "outputs": []
+    },
+    "endpoints": [
+        {
+            "name": "setOperator",
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "new_operator",
+                    "type": "Address"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "setTreasury",
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "new_treasury",
+                    "type": "Address"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "setProtocolFeeBps",
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "new_bps",
+                    "type": "u64"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "pause",
+            "mutability": "mutable",
+            "inputs": [],
+            "outputs": []
+        },
+        {
+            "name": "resume",
+            "mutability": "mutable",
+            "inputs": [],
+            "outputs": []
+        },
+        {
+            "name": "createMatch",
+            "mutability": "mutable",
+            "payableInTokens": [
+                "EGLD"
+            ],
+            "inputs": [
+                {
+                    "name": "opponent",
+                    "type": "Address"
+                },
+                {
+                    "name": "base_time_seconds",
+                    "type": "u64"
+                }
+            ],
+            "outputs": [
+                {
+                    "type": "u64"
+                }
+            ]
+        },
+        {
+            "name": "joinMatch",
+            "mutability": "mutable",
+            "payableInTokens": [
+                "EGLD"
+            ],
+            "inputs": [
+                {
+                    "name": "match_id",
+                    "type": "u64"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "cancelMatch",
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "match_id",
+                    "type": "u64"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "commitBid",
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "match_id",
+                    "type": "u64"
+                },
+                {
+                    "name": "commitment32",
+                    "type": "bytes"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "revealBid",
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "match_id",
+                    "type": "u64"
+                },
+                {
+                    "name": "bid_black_time_seconds",
+                    "type": "u64"
+                },
+                {
+                    "name": "seed_u64",
+                    "type": "u64"
+                },
+                {
+                    "name": "salt",
+                    "type": "bytes"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "claimForfeitNoCommit",
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "match_id",
+                    "type": "u64"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "claimForfeitNoReveal",
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "match_id",
+                    "type": "u64"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "setMatchChat",
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "match_id",
+                    "type": "u64"
+                },
+                {
+                    "name": "bulletin_post_id",
+                    "type": "u64"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "reportResult",
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "match_id",
+                    "type": "u64"
+                },
+                {
+                    "name": "result",
+                    "type": "MatchResult"
+                },
+                {
+                    "name": "pgn_hash32",
+                    "type": "bytes"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "claimRefundAfterDeadline",
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "match_id",
+                    "type": "u64"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "getConfig",
+            "mutability": "readonly",
+            "inputs": [],
+            "outputs": [
+                {
+                    "type": "Config"
+                }
+            ]
+        },
+        {
+            "name": "getMatch",
+            "mutability": "readonly",
+            "inputs": [
+                {
+                    "name": "match_id",
+                    "type": "u64"
+                }
+            ],
+            "outputs": [
+                {
+                    "type": "Match"
+                }
+            ]
+        },
+        {
+            "name": "getMatchSummary",
+            "mutability": "readonly",
+            "inputs": [
+                {
+                    "name": "match_id",
+                    "type": "u64"
+                }
+            ],
+            "outputs": [
+                {
+                    "type": "MatchSummary"
+                }
+            ]
+        },
+        {
+            "name": "getMatchCount",
+            "mutability": "readonly",
+            "inputs": [],
+            "outputs": [
+                {
+                    "type": "u64"
+                }
+            ]
+        },
+        {
+            "name": "getLatestMatches",
+            "mutability": "readonly",
+            "inputs": [
+                {
+                    "name": "count",
+                    "type": "u64"
+                }
+            ],
+            "outputs": [
+                {
+                    "type": "variadic<MatchSummary>",
+                    "multi_result": true
+                }
+            ]
+        }
+    ],
+    "events": [
+        {
+            "identifier": "matchCreated",
+            "inputs": [
+                {
+                    "name": "match_id",
+                    "type": "u64",
+                    "indexed": true
+                },
+                {
+                    "name": "challenger",
+                    "type": "Address",
+                    "indexed": true
+                },
+                {
+                    "name": "opponent",
+                    "type": "Address",
+                    "indexed": true
+                },
+                {
+                    "name": "data",
+                    "type": "MatchCreatedData"
+                }
+            ]
+        },
+        {
+            "identifier": "matchJoined",
+            "inputs": [
+                {
+                    "name": "match_id",
+                    "type": "u64",
+                    "indexed": true
+                },
+                {
+                    "name": "opponent",
+                    "type": "Address",
+                    "indexed": true
+                },
+                {
+                    "name": "data",
+                    "type": "MatchJoinedData"
+                }
+            ]
+        },
+        {
+            "identifier": "bidCommitted",
+            "inputs": [
+                {
+                    "name": "match_id",
+                    "type": "u64",
+                    "indexed": true
+                },
+                {
+                    "name": "player",
+                    "type": "Address",
+                    "indexed": true
+                }
+            ]
+        },
+        {
+            "identifier": "bidRevealed",
+            "inputs": [
+                {
+                    "name": "match_id",
+                    "type": "u64",
+                    "indexed": true
+                },
+                {
+                    "name": "player",
+                    "type": "Address",
+                    "indexed": true
+                },
+                {
+                    "name": "bid_black_time_seconds",
+                    "type": "u64"
+                }
+            ]
+        },
+        {
+            "identifier": "matchStarted",
+            "inputs": [
+                {
+                    "name": "match_id",
+                    "type": "u64",
+                    "indexed": true
+                },
+                {
+                    "name": "white",
+                    "type": "Address",
+                    "indexed": true
+                },
+                {
+                    "name": "black",
+                    "type": "Address",
+                    "indexed": true
+                },
+                {
+                    "name": "data",
+                    "type": "MatchStartedData"
+                }
+            ]
+        },
+        {
+            "identifier": "matchFinalized",
+            "inputs": [
+                {
+                    "name": "match_id",
+                    "type": "u64",
+                    "indexed": true
+                },
+                {
+                    "name": "data",
+                    "type": "MatchFinalizedData"
+                }
+            ]
+        },
+        {
+            "identifier": "matchCancelled",
+            "inputs": [
+                {
+                    "name": "match_id",
+                    "type": "u64",
+                    "indexed": true
+                },
+                {
+                    "name": "data",
+                    "type": "MatchCancelledData"
+                }
+            ]
+        },
+        {
+            "identifier": "matchRefunded",
+            "inputs": [
+                {
+                    "name": "match_id",
+                    "type": "u64",
+                    "indexed": true
+                },
+                {
+                    "name": "data",
+                    "type": "MatchRefundedData"
+                }
+            ]
+        },
+        {
+            "identifier": "matchForfeit",
+            "inputs": [
+                {
+                    "name": "match_id",
+                    "type": "u64",
+                    "indexed": true
+                },
+                {
+                    "name": "winner",
+                    "type": "Address",
+                    "indexed": true
+                },
+                {
+                    "name": "data",
+                    "type": "MatchForfeitData"
+                }
+            ]
+        }
+    ],
+    "esdtAttributes": [],
+    "hasCallback": false,
+    "types": {
+        "Config": {
+            "type": "struct",
+            "fields": [
+                {
+                    "name": "owner",
+                    "type": "Address"
+                },
+                {
+                    "name": "operator",
+                    "type": "Address"
+                },
+                {
+                    "name": "treasury",
+                    "type": "Address"
+                },
+                {
+                    "name": "protocol_fee_bps",
+                    "type": "u64"
+                },
+                {
+                    "name": "paused",
+                    "type": "bool"
+                },
+                {
+                    "name": "max_base_time_seconds",
+                    "type": "u64"
+                },
+                {
+                    "name": "min_black_time_seconds",
+                    "type": "u64"
+                },
+                {
+                    "name": "max_black_time_seconds",
+                    "type": "u64"
+                },
+                {
+                    "name": "join_timeout_seconds",
+                    "type": "u64"
+                },
+                {
+                    "name": "commit_phase_seconds",
+                    "type": "u64"
+                },
+                {
+                    "name": "reveal_phase_seconds",
+                    "type": "u64"
+                },
+                {
+                    "name": "slack_seconds",
+                    "type": "u64"
+                }
+            ]
+        },
+        "Match": {
+            "type": "struct",
+            "fields": [
+                {
+                    "name": "id",
+                    "type": "u64"
+                },
+                {
+                    "name": "status",
+                    "type": "MatchStatus"
+                },
+                {
+                    "name": "challenger",
+                    "type": "Address"
+                },
+                {
+                    "name": "opponent",
+                    "type": "Address"
+                },
+                {
+                    "name": "stake_atto",
+                    "type": "BigUint"
+                },
+                {
+                    "name": "base_time_seconds",
+                    "type": "u64"
+                },
+                {
+                    "name": "join_deadline_ts",
+                    "type": "u64"
+                },
+                {
+                    "name": "commit_deadline_ts",
+                    "type": "u64"
+                },
+                {
+                    "name": "reveal_deadline_ts",
+                    "type": "u64"
+                },
+                {
+                    "name": "start_ts",
+                    "type": "u64"
+                },
+                {
+                    "name": "game_deadline_ts",
+                    "type": "u64"
+                },
+                {
+                    "name": "challenger_commitment",
+                    "type": "bytes"
+                },
+                {
+                    "name": "opponent_commitment",
+                    "type": "bytes"
+                },
+                {
+                    "name": "challenger_bid",
+                    "type": "u64"
+                },
+                {
+                    "name": "challenger_seed",
+                    "type": "u64"
+                },
+                {
+                    "name": "opponent_bid",
+                    "type": "u64"
+                },
+                {
+                    "name": "opponent_seed",
+                    "type": "u64"
+                },
+                {
+                    "name": "white",
+                    "type": "Address"
+                },
+                {
+                    "name": "black",
+                    "type": "Address"
+                },
+                {
+                    "name": "white_time_seconds",
+                    "type": "u64"
+                },
+                {
+                    "name": "black_time_seconds",
+                    "type": "u64"
+                },
+                {
+                    "name": "chess960_pos",
+                    "type": "u16"
+                },
+                {
+                    "name": "result",
+                    "type": "MatchResult"
+                },
+                {
+                    "name": "winner_paid",
+                    "type": "Address"
+                },
+                {
+                    "name": "payout_atto",
+                    "type": "BigUint"
+                },
+                {
+                    "name": "fee_atto",
+                    "type": "BigUint"
+                },
+                {
+                    "name": "pgn_hash32",
+                    "type": "bytes"
+                },
+                {
+                    "name": "ended_ts",
+                    "type": "u64"
+                },
+                {
+                    "name": "chat_post_id",
+                    "type": "u64"
+                }
+            ]
+        },
+        "MatchCancelledData": {
+            "type": "struct",
+            "fields": [
+                {
+                    "name": "refunded_stake_atto",
+                    "type": "BigUint"
+                },
+                {
+                    "name": "ended_ts",
+                    "type": "u64"
+                }
+            ]
+        },
+        "MatchCreatedData": {
+            "type": "struct",
+            "fields": [
+                {
+                    "name": "stake_atto",
+                    "type": "BigUint"
+                },
+                {
+                    "name": "join_deadline_ts",
+                    "type": "u64"
+                },
+                {
+                    "name": "base_time_seconds",
+                    "type": "u64"
+                }
+            ]
+        },
+        "MatchFinalizedData": {
+            "type": "struct",
+            "fields": [
+                {
+                    "name": "white",
+                    "type": "Address"
+                },
+                {
+                    "name": "black",
+                    "type": "Address"
+                },
+                {
+                    "name": "result_enum",
+                    "type": "MatchResult"
+                },
+                {
+                    "name": "winner_paid",
+                    "type": "Address"
+                },
+                {
+                    "name": "payout_atto",
+                    "type": "BigUint"
+                },
+                {
+                    "name": "fee_atto",
+                    "type": "BigUint"
+                },
+                {
+                    "name": "pgn_hash32",
+                    "type": "bytes"
+                },
+                {
+                    "name": "ended_ts",
+                    "type": "u64"
+                }
+            ]
+        },
+        "MatchForfeitData": {
+            "type": "struct",
+            "fields": [
+                {
+                    "name": "reason_code",
+                    "type": "u8"
+                },
+                {
+                    "name": "ended_ts",
+                    "type": "u64"
+                }
+            ]
+        },
+        "MatchJoinedData": {
+            "type": "struct",
+            "fields": [
+                {
+                    "name": "commit_deadline_ts",
+                    "type": "u64"
+                }
+            ]
+        },
+        "MatchRefundedData": {
+            "type": "struct",
+            "fields": [
+                {
+                    "name": "stake_atto",
+                    "type": "BigUint"
+                },
+                {
+                    "name": "ended_ts",
+                    "type": "u64"
+                }
+            ]
+        },
+        "MatchResult": {
+            "type": "enum",
+            "variants": [
+                {
+                    "name": "Unset",
+                    "discriminant": 0
+                },
+                {
+                    "name": "WhiteWin",
+                    "discriminant": 1
+                },
+                {
+                    "name": "BlackWin",
+                    "discriminant": 2
+                },
+                {
+                    "name": "Draw",
+                    "discriminant": 3
+                },
+                {
+                    "name": "AbortedRefund",
+                    "discriminant": 4
+                },
+                {
+                    "name": "ForfeitNoCommit",
+                    "discriminant": 5
+                },
+                {
+                    "name": "ForfeitNoReveal",
+                    "discriminant": 6
+                }
+            ]
+        },
+        "MatchStartedData": {
+            "type": "struct",
+            "fields": [
+                {
+                    "name": "white_time_seconds",
+                    "type": "u64"
+                },
+                {
+                    "name": "black_time_seconds",
+                    "type": "u64"
+                },
+                {
+                    "name": "chess960_pos",
+                    "type": "u16"
+                },
+                {
+                    "name": "game_deadline_ts",
+                    "type": "u64"
+                }
+            ]
+        },
+        "MatchStatus": {
+            "type": "enum",
+            "variants": [
+                {
+                    "name": "WaitingForOpponent",
+                    "discriminant": 0
+                },
+                {
+                    "name": "CommitPhase",
+                    "discriminant": 1
+                },
+                {
+                    "name": "RevealPhase",
+                    "discriminant": 2
+                },
+                {
+                    "name": "InProgress",
+                    "discriminant": 3
+                },
+                {
+                    "name": "Finished",
+                    "discriminant": 4
+                },
+                {
+                    "name": "Cancelled",
+                    "discriminant": 5
+                }
+            ]
+        },
+        "MatchSummary": {
+            "type": "struct",
+            "fields": [
+                {
+                    "name": "id",
+                    "type": "u64"
+                },
+                {
+                    "name": "status",
+                    "type": "MatchStatus"
+                },
+                {
+                    "name": "challenger",
+                    "type": "Address"
+                },
+                {
+                    "name": "opponent",
+                    "type": "Address"
+                },
+                {
+                    "name": "stake_atto",
+                    "type": "BigUint"
+                },
+                {
+                    "name": "base_time_seconds",
+                    "type": "u64"
+                },
+                {
+                    "name": "start_ts",
+                    "type": "u64"
+                },
+                {
+                    "name": "ended_ts",
+                    "type": "u64"
+                },
+                {
+                    "name": "result",
+                    "type": "MatchResult"
+                },
+                {
+                    "name": "winner_paid",
+                    "type": "Address"
+                },
+                {
+                    "name": "chess960_pos",
+                    "type": "u16"
+                },
+                {
+                    "name": "chat_post_id",
+                    "type": "u64"
+                }
+            ]
+        }
+    }
+}
