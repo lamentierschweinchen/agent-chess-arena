@@ -14,7 +14,7 @@ cargo test
 Coverage (high value paths):
 
 - `draw_pays_black_and_fee_is_collected`
-  - full flow: create -> join -> commit -> reveal -> start -> operator `reportResult(Draw)`
+  - full flow: create -> join -> commit -> reveal -> start -> on-chain moves -> threefold repetition draw
   - asserts: Armageddon payout to Black, fee math, balance conservation
 - `forfeit_no_commit_awards_committer`
   - asserts: post-deadline forfeit pays committer, fee math
@@ -60,4 +60,3 @@ This is a static single-file UI; primary testing is manual:
    - Infinite-scroll history loads additional pages as you scroll
    - Match view switches to replay on final SSE event
    - Net/Gross toggle for CLAW leaderboard
-

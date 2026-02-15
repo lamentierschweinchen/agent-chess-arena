@@ -68,7 +68,7 @@ fn setup() -> Setup {
 
 #[test]
 fn draw_pays_black_and_fee_is_collected() {
-    let (mut b, operator, treasury, _owner, sc) = setup();
+    let (mut b, _operator, treasury, _owner, sc) = setup();
 
     let alice = b.create_user_account(&rust_biguint!(10_000_000_000_000_000_000u64));
     let bob = b.create_user_account(&rust_biguint!(10_000_000_000_000_000_000u64));
@@ -92,12 +92,13 @@ fn draw_pays_black_and_fee_is_collected() {
 
     // Commit/reveal: Alice bids less, so she becomes Black (Armageddon draw odds).
     let bid_a = 60u64;
-    let seed_a = 123u64;
+    let seed_a = 0u64;
     let salt_a = b"salt-a";
     let commit_a = sha256_commitment(bid_a, seed_a, salt_a);
 
     let bid_b = 90u64;
-    let seed_b = 456u64;
+    // Choose seeds so (seed_a ^ seed_b) % 960 == 518 (standard chess starting position).
+    let seed_b = 518u64;
     let salt_b = b"salt-b";
     let commit_b = sha256_commitment(bid_b, seed_b, salt_b);
 
@@ -132,16 +133,71 @@ fn draw_pays_black_and_fee_is_collected() {
     })
     .assert_ok();
 
-    // Operator reports a draw; payout goes to Black.
-    let pgn_hash = [7u8; 32];
-    b.execute_tx(&operator, &sc, &rust_biguint!(0), |c| {
-        c.report_result(
-            match_id,
-            agent_chess_arena::types::MatchResult::Draw,
-            managed_buffer!(pgn_hash.as_slice()),
+    // Sanity-check: chess960_pos==518 should be the standard initial position (knights on g1/g8).
+    b.execute_query(&sc, |c| {
+        let s = c.get_onchain_state(match_id);
+        let w_knights = s.bitboards[agent_chess_arena::chess::bb_idx(
+            agent_chess_arena::chess::WHITE,
+            agent_chess_arena::chess::PIECE_KNIGHT,
+        )];
+        let b_knights = s.bitboards[agent_chess_arena::chess::bb_idx(
+            agent_chess_arena::chess::BLACK,
+            agent_chess_arena::chess::PIECE_KNIGHT,
+        )];
+        assert!(
+            (w_knights & (1u64 << 6)) != 0,
+            "expected white knight on g1"
+        );
+        assert!(
+            (b_knights & (1u64 << 62)) != 0,
+            "expected black knight on g8"
         );
     })
     .assert_ok();
+
+    // On-chain gameplay: force a threefold repetition (Nf3/Nf6/Ng1/Ng8 twice).
+    // Squares are 0..63 with a1=0, h8=63.
+    let g1 = 6u8;
+    let f3 = 21u8;
+    let g8 = 62u8;
+    let f6 = 45u8;
+
+    let mv_g1f3 = agent_chess_arena::chess::encode_move(g1, f3, 0);
+    let mv_g8f6 = agent_chess_arena::chess::encode_move(g8, f6, 0);
+    let mv_f3g1 = agent_chess_arena::chess::encode_move(f3, g1, 0);
+    let mv_f6g8 = agent_chess_arena::chess::encode_move(f6, g8, 0);
+
+    // Use small timestamp increments so clocks decrease deterministically.
+    let mut ts = 1_000u64;
+    for _ in 0..2 {
+        ts += 1;
+        b.set_block_timestamp(ts);
+        b.execute_tx(&bob, &sc, &rust_biguint!(0), |c| {
+            c.submit_move(match_id, mv_g1f3, managed_buffer!(&[]));
+        })
+        .assert_ok();
+
+        ts += 1;
+        b.set_block_timestamp(ts);
+        b.execute_tx(&alice, &sc, &rust_biguint!(0), |c| {
+            c.submit_move(match_id, mv_g8f6, managed_buffer!(&[]));
+        })
+        .assert_ok();
+
+        ts += 1;
+        b.set_block_timestamp(ts);
+        b.execute_tx(&bob, &sc, &rust_biguint!(0), |c| {
+            c.submit_move(match_id, mv_f3g1, managed_buffer!(&[]));
+        })
+        .assert_ok();
+
+        ts += 1;
+        b.set_block_timestamp(ts);
+        b.execute_tx(&alice, &sc, &rust_biguint!(0), |c| {
+            c.submit_move(match_id, mv_f6g8, managed_buffer!(&[]));
+        })
+        .assert_ok();
+    }
 
     b.execute_query(&sc, |c| {
         let m2 = c.get_match(match_id);

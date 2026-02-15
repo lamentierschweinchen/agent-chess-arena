@@ -9,6 +9,7 @@ commitment helpers for the commit/reveal time-bid auction.
 from __future__ import annotations
 
 import argparse
+import base64
 import hashlib
 import json
 import os
@@ -141,6 +142,44 @@ def query(function: str, args: list[str], contract: str | None = None) -> Any:
         return out
 
 
+FILES = "abcdefgh"
+PROMO_MAP = {"q": 1, "r": 2, "b": 3, "n": 4}
+
+
+def square_index(s: str) -> int:
+    s = (s or "").strip().lower()
+    if len(s) != 2 or s[0] not in FILES or s[1] not in "12345678":
+        raise ValueError(f"invalid square: {s}")
+    f = FILES.index(s[0])
+    r = int(s[1]) - 1
+    return r * 8 + f
+
+
+def encode_move_uci(uci: str) -> int:
+    u = (uci or "").strip().lower()
+    if len(u) not in (4, 5):
+        raise ValueError("uci must be like e2e4 or e7e8q")
+    fr = square_index(u[0:2])
+    to = square_index(u[2:4])
+    promo = 0
+    if len(u) == 5:
+        promo = PROMO_MAP.get(u[4], 0)
+    return (fr & 0x3F) | ((to & 0x3F) << 6) | ((promo & 0x0F) << 12)
+
+
+def decode_return_data_str(out: Any) -> str:
+    if not isinstance(out, dict):
+        raise RuntimeError("unexpected query output (not json)")
+    rd = out.get("returnData") or []
+    if not rd:
+        return ""
+    raw = base64.b64decode(rd[0])
+    try:
+        return raw.decode("utf-8")
+    except Exception:
+        return raw.hex()
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description="AgentChessArena CLI helpers")
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -221,6 +260,30 @@ def main() -> int:
     p_report.add_argument("--pgn-hash-hex", required=True, help="32 bytes as 0x.. (66 chars). Use 0x00.. for refund.")
     p_report.add_argument("--contract", default="")
 
+    # On-chain moves (relay-submitted, player-signed).
+    p_enc = sub.add_parser("encode-move")
+    p_enc.add_argument("--uci", required=True, help="e2e4 / e7e8q / etc.")
+
+    p_msg = sub.add_parser("move-message")
+    p_msg.add_argument("--match-id", type=int, required=True)
+    p_msg.add_argument("--ply", type=int, required=True, help="Current ply from getOnchainState().ply")
+    p_msg.add_argument("--uci", required=True)
+    p_msg.add_argument("--contract", default="")
+
+    p_sign = sub.add_parser("sign-move")
+    p_sign.add_argument("--pem", required=True, help="Player PEM (signer)")
+    p_sign.add_argument("--match-id", type=int, required=True)
+    p_sign.add_argument("--ply", type=int, required=True)
+    p_sign.add_argument("--uci", required=True)
+    p_sign.add_argument("--contract", default="")
+
+    p_submit = sub.add_parser("submit-move")
+    p_submit.add_argument("--pem", required=True, help="Relay PEM (tx sender paying gas)")
+    p_submit.add_argument("--match-id", type=int, required=True)
+    p_submit.add_argument("--uci", required=True)
+    p_submit.add_argument("--signature-hex", required=True, help="ed25519 signature as 0x.. over the move message")
+    p_submit.add_argument("--contract", default="")
+
     p_query = sub.add_parser("query")
     p_query.add_argument("--function", required=True)
     p_query.add_argument("--arguments", nargs="*", default=[])
@@ -295,6 +358,34 @@ def main() -> int:
             print(call(args.pem, "reportResult", [str(args.match_id), str(args.result_enum), args.pgn_hash_hex], contract=args.contract))
             return 0
 
+        if args.cmd == "encode-move":
+            print(encode_move_uci(args.uci))
+            return 0
+
+        if args.cmd == "move-message":
+            mv = encode_move_uci(args.uci)
+            out = query("getMoveMessage", [str(args.match_id), str(args.ply), str(mv)], contract=args.contract)
+            print(decode_return_data_str(out))
+            return 0
+
+        if args.cmd == "sign-move":
+            mv = encode_move_uci(args.uci)
+            out = query("getMoveMessage", [str(args.match_id), str(args.ply), str(mv)], contract=args.contract)
+            msg = decode_return_data_str(out)
+            if not msg:
+                raise RuntimeError("empty move message")
+            sig_out = run([CLAWPY, "wallet", "sign-message", "--pem", args.pem, "--message", msg])
+            print(sig_out)
+            return 0
+
+        if args.cmd == "submit-move":
+            mv = encode_move_uci(args.uci)
+            sig_hex = args.signature_hex.strip()
+            if not sig_hex.startswith("0x"):
+                raise RuntimeError("--signature-hex must start with 0x")
+            print(call(args.pem, "submitMove", [str(args.match_id), str(mv), sig_hex], contract=args.contract))
+            return 0
+
         if args.cmd == "query":
             out = query(args.function, args.arguments, contract=args.contract)
             print(json.dumps(out, indent=2) if isinstance(out, dict) else out)
@@ -309,4 +400,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

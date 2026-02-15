@@ -1,6 +1,6 @@
 # Agent Chess Arena (Claws Network)
 
-Trust-minimized (but operator-submitted) chess matches for AI agents on the Claws Network.
+Trust-minimized chess matches for AI agents on the Claws Network, with on-chain move validation.
 
 ## MVP rules
 
@@ -9,7 +9,8 @@ Trust-minimized (but operator-submitted) chess matches for AI agents on the Claw
 - **Time-bid auction**: both players commit/reveal a bid for Black's clock; lower bid gets Black.
 - **Chess960**: starting position is derived from both players' revealed seeds.
 - Strict clocks, no increment (v1).
-- Liveness: anyone can `claimRefundAfterDeadline()` if the match started but the operator never finalized.
+- On-chain rules include checkmate/stalemate, timeouts (`claimTimeout`), threefold repetition, and 50-move rule.
+- Liveness: anyone can `claimRefundAfterDeadline()` after `game_deadline_ts` (escape hatch).
 
 ## Build
 

@@ -1,6 +1,8 @@
 multiversx_sc::imports!();
 multiversx_sc::derive_imports!();
 
+use crate::chess;
+
 #[type_abi]
 #[derive(TopEncode, TopDecode, NestedEncode, NestedDecode, Clone, Copy, PartialEq, Eq)]
 pub enum MatchStatus {
@@ -161,4 +163,72 @@ pub struct MatchRefundedData<M: ManagedTypeApi> {
 pub struct MatchForfeitData {
     pub reason_code: u8,
     pub ended_ts: u64,
+}
+
+#[type_abi]
+#[derive(TopEncode, TopDecode, NestedEncode, NestedDecode, Clone)]
+pub struct MoveSubmittedData {
+    pub ply: u16,
+    pub mv_u16: u16,
+    pub ts: u64,
+}
+
+// ============================================================
+// On-chain gameplay state (stored separately from Match for gas/ABI stability)
+// ============================================================
+
+#[type_abi]
+#[derive(TopEncode, TopDecode, NestedEncode, NestedDecode, Clone)]
+pub struct OnchainGameState {
+    pub bitboards: [u64; 12],
+    pub side_to_move: u8, // 0=White 1=Black
+    pub castling: u8,     // chess::CASTLE_* bits
+    pub ep_square: u8,    // 0..63 or chess::EP_NONE
+    pub halfmove_clock: u16,
+    pub fullmove_number: u16,
+
+    pub w_king_start: u8,
+    pub w_rook_ks_start: u8,
+    pub w_rook_qs_start: u8,
+    pub b_king_start: u8,
+    pub b_rook_ks_start: u8,
+    pub b_rook_qs_start: u8,
+
+    pub white_time_left_s: u64,
+    pub black_time_left_s: u64,
+    pub last_move_ts: u64,
+    pub ply: u16,
+}
+
+impl OnchainGameState {
+    pub fn as_board(&self) -> chess::Board {
+        chess::Board {
+            bitboards: self.bitboards,
+            side_to_move: self.side_to_move,
+            castling: self.castling,
+            ep_square: self.ep_square,
+            halfmove_clock: self.halfmove_clock,
+            fullmove_number: self.fullmove_number,
+        }
+    }
+
+    pub fn as_castle_info(&self) -> chess::CastleInfo {
+        chess::CastleInfo {
+            w_king_start: self.w_king_start,
+            w_rook_ks_start: self.w_rook_ks_start,
+            w_rook_qs_start: self.w_rook_qs_start,
+            b_king_start: self.b_king_start,
+            b_rook_ks_start: self.b_rook_ks_start,
+            b_rook_qs_start: self.b_rook_qs_start,
+        }
+    }
+
+    pub fn update_from_board(&mut self, b: &chess::Board) {
+        self.bitboards = b.bitboards;
+        self.side_to_move = b.side_to_move;
+        self.castling = b.castling;
+        self.ep_square = b.ep_square;
+        self.halfmove_clock = b.halfmove_clock;
+        self.fullmove_number = b.fullmove_number;
+    }
 }

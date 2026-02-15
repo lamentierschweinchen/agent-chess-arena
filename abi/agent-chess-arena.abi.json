@@ -254,7 +254,37 @@
             "outputs": []
         },
         {
+            "name": "submitMove",
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "match_id",
+                    "type": "u64"
+                },
+                {
+                    "name": "mv_u16",
+                    "type": "u16"
+                },
+                {
+                    "name": "signature",
+                    "type": "bytes"
+                }
+            ],
+            "outputs": []
+        },
+        {
             "name": "claimRefundAfterDeadline",
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "match_id",
+                    "type": "u64"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "claimTimeout",
             "mutability": "mutable",
             "inputs": [
                 {
@@ -286,6 +316,44 @@
             "outputs": [
                 {
                     "type": "Match"
+                }
+            ]
+        },
+        {
+            "name": "getOnchainState",
+            "mutability": "readonly",
+            "inputs": [
+                {
+                    "name": "match_id",
+                    "type": "u64"
+                }
+            ],
+            "outputs": [
+                {
+                    "type": "OnchainGameState"
+                }
+            ]
+        },
+        {
+            "name": "getMoveMessage",
+            "mutability": "readonly",
+            "inputs": [
+                {
+                    "name": "match_id",
+                    "type": "u64"
+                },
+                {
+                    "name": "ply",
+                    "type": "u16"
+                },
+                {
+                    "name": "mv_u16",
+                    "type": "u16"
+                }
+            ],
+            "outputs": [
+                {
+                    "type": "bytes"
                 }
             ]
         },
@@ -491,6 +559,25 @@
                 {
                     "name": "data",
                     "type": "MatchForfeitData"
+                }
+            ]
+        },
+        {
+            "identifier": "moveSubmitted",
+            "inputs": [
+                {
+                    "name": "match_id",
+                    "type": "u64",
+                    "indexed": true
+                },
+                {
+                    "name": "player",
+                    "type": "Address",
+                    "indexed": true
+                },
+                {
+                    "name": "data",
+                    "type": "MoveSubmittedData"
                 }
             ]
         }
@@ -907,6 +994,92 @@
                 {
                     "name": "chat_post_id",
                     "type": "u64"
+                }
+            ]
+        },
+        "MoveSubmittedData": {
+            "type": "struct",
+            "fields": [
+                {
+                    "name": "ply",
+                    "type": "u16"
+                },
+                {
+                    "name": "mv_u16",
+                    "type": "u16"
+                },
+                {
+                    "name": "ts",
+                    "type": "u64"
+                }
+            ]
+        },
+        "OnchainGameState": {
+            "type": "struct",
+            "fields": [
+                {
+                    "name": "bitboards",
+                    "type": "array12<u64>"
+                },
+                {
+                    "name": "side_to_move",
+                    "type": "u8"
+                },
+                {
+                    "name": "castling",
+                    "type": "u8"
+                },
+                {
+                    "name": "ep_square",
+                    "type": "u8"
+                },
+                {
+                    "name": "halfmove_clock",
+                    "type": "u16"
+                },
+                {
+                    "name": "fullmove_number",
+                    "type": "u16"
+                },
+                {
+                    "name": "w_king_start",
+                    "type": "u8"
+                },
+                {
+                    "name": "w_rook_ks_start",
+                    "type": "u8"
+                },
+                {
+                    "name": "w_rook_qs_start",
+                    "type": "u8"
+                },
+                {
+                    "name": "b_king_start",
+                    "type": "u8"
+                },
+                {
+                    "name": "b_rook_ks_start",
+                    "type": "u8"
+                },
+                {
+                    "name": "b_rook_qs_start",
+                    "type": "u8"
+                },
+                {
+                    "name": "white_time_left_s",
+                    "type": "u64"
+                },
+                {
+                    "name": "black_time_left_s",
+                    "type": "u64"
+                },
+                {
+                    "name": "last_move_ts",
+                    "type": "u64"
+                },
+                {
+                    "name": "ply",
+                    "type": "u16"
                 }
             ]
         }
