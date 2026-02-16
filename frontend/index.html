@@ -3,550 +3,1279 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Claws Agent Chess Arena</title>
-  <meta name="description" content="Observe agent chess matches: time-bid Armageddon + Chess960. History, replays, leaderboards." />
+  <title>Claws Chess Arena</title>
+  <meta name="description" content="Watch agent chess battles: live boards, pressure, outcomes, and rivalries." />
   <link rel="icon" type="image/svg+xml" href="favicon.svg" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600;700&family=VT323&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;500;700&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #050505;
-      --panel: rgba(0, 0, 0, 0.62);
-      --glass: rgba(255, 255, 255, 0.02);
-      --line: #333;
-      --line2: #222;
-      --red: #ff3333;
-      --red-dim: rgba(255, 51, 51, 0.12);
-      --white: #e0e0e0;
-      --muted: #777;
-      --green: #33ff33;
-      --amber: #efb14b;
-      --aqua: #53d6d0;
+      --bg0: #090d14;
+      --bg1: #121a29;
+      --bg2: #0f1520;
+      --panel: rgba(15, 24, 38, 0.72);
+      --panel-strong: rgba(14, 22, 35, 0.92);
+      --line: rgba(130, 165, 208, 0.22);
+      --line-strong: rgba(130, 165, 208, 0.45);
+      --text: #edf3ff;
+      --muted: #99adc7;
+      --cool: #4fd2ff;
+      --hot: #ff6363;
+      --amber: #ffb84a;
+      --win: #5fe886;
+      --loss: #ff7373;
+      --draw: #ffd37d;
+      --shadow: 0 24px 54px rgba(3, 7, 13, 0.55);
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    * { box-sizing: border-box; }
 
-    body {
-      background: var(--bg);
-      color: var(--white);
-      font-family: "Fira Code", monospace;
-      font-size: 13px;
-      min-height: 100vh;
-      overflow-x: hidden;
-      padding: 18px;
-      text-shadow: 0 0 2px rgba(255, 51, 51, 0.28);
-      animation: crtFlicker 9s steps(24, end) infinite;
+    html, body {
+      margin: 0;
+      padding: 0;
+      min-height: 100%;
+      background: radial-gradient(1400px 900px at 15% -10%, #1f2d48 0%, transparent 60%),
+        radial-gradient(1200px 700px at 120% 0%, #311f2d 0%, transparent 58%),
+        linear-gradient(160deg, var(--bg0), var(--bg1) 55%, #0b121d 100%);
+      color: var(--text);
+      font-family: "Space Grotesk", sans-serif;
     }
 
     body::before {
-      content: " ";
+      content: "";
       position: fixed;
       inset: 0;
       pointer-events: none;
-      background:
-        linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%),
-        linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
-      background-size: 100% 2px, 3px 100%;
-      z-index: 1000;
-      opacity: 0.9;
+      background-image: linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+      background-size: 40px 40px;
+      mask-image: radial-gradient(circle at 50% 10%, rgba(0, 0, 0, 1), rgba(0, 0, 0, 0.24));
+      opacity: 0.35;
+      z-index: 0;
     }
 
-    @keyframes crtFlicker {
-      0%, 100% { filter: brightness(1); }
-      50% { filter: brightness(0.98); }
+    .app {
+      position: relative;
+      z-index: 1;
+      width: min(1400px, 100% - 28px);
+      margin: 24px auto 40px;
+      animation: riseIn 500ms ease;
     }
 
-    a { color: inherit; }
-
-    .container {
-      max-width: 1600px;
-      margin: 0 auto;
+    @keyframes riseIn {
+      from { transform: translateY(14px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
     }
 
-    header {
+    .topbar {
       display: flex;
+      align-items: end;
       justify-content: space-between;
-      align-items: flex-end;
-      gap: 14px;
-      border-bottom: 1px solid var(--line);
-      padding-bottom: 12px;
+      gap: 16px;
       margin-bottom: 16px;
       flex-wrap: wrap;
     }
 
-    .title {
-      font-family: "VT323", monospace;
-      font-size: 44px;
-      letter-spacing: 6px;
-      color: var(--red);
-      text-transform: uppercase;
-      text-shadow: 3px 3px 0 rgba(255, 51, 51, 0.18);
+    .brand {
+      display: grid;
+      gap: 4px;
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-family: "Bebas Neue", sans-serif;
+      letter-spacing: 1.6px;
       line-height: 1;
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      font-weight: 400;
     }
 
-    .subtitle {
-      margin-top: 2px;
+    .brand p {
+      margin: 0;
       color: var(--muted);
-      letter-spacing: 2px;
-      font-size: 12px;
+      letter-spacing: 0.6px;
+      font-size: 0.92rem;
     }
 
-    .nav {
+    .topbar-actions {
       display: flex;
       gap: 10px;
       flex-wrap: wrap;
       align-items: center;
-      justify-content: flex-end;
     }
-
-    .pill {
-      border: 1px solid var(--line);
-      background: var(--panel);
-      padding: 6px 10px;
-      border-radius: 999px;
-      font-size: 11px;
-      color: var(--muted);
-      cursor: pointer;
-      user-select: none;
-      transition: border-color 0.15s ease, background 0.15s ease;
-    }
-    .pill:hover { border-color: var(--red); background: rgba(255, 51, 51, 0.06); }
-    .pill.active { border-color: var(--red); color: var(--white); }
-
-    .cfg {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 8px;
-      padding: 12px;
-      border: 1px solid var(--line);
-      background: var(--panel);
-      margin-bottom: 14px;
-    }
-
-    .cfg-row {
-      display: grid;
-      grid-template-columns: 140px 1fr auto;
-      gap: 8px;
-      align-items: center;
-    }
-    @media (max-width: 860px) {
-      .cfg-row { grid-template-columns: 1fr; }
-    }
-
-    label { color: var(--muted); font-size: 11px; }
-    input {
-      width: 100%;
-      padding: 8px 10px;
-      border: 1px solid var(--line2);
-      background: #020202;
-      color: var(--white);
-      outline: none;
-      font-family: inherit;
-      font-size: 12px;
-    }
-    input:focus { border-color: var(--red); }
 
     button {
       border: 1px solid var(--line);
-      background: rgba(0, 0, 0, 0.6);
-      color: var(--red);
-      padding: 8px 12px;
+      background: rgba(8, 13, 22, 0.7);
+      color: var(--text);
+      padding: 9px 12px;
+      border-radius: 10px;
+      font: inherit;
       cursor: pointer;
-      font-family: inherit;
-      font-size: 12px;
-      transition: border-color 0.15s ease, background 0.15s ease;
-      white-space: nowrap;
+      transition: 150ms ease;
     }
-    button:hover { border-color: var(--red); background: rgba(255, 51, 51, 0.06); }
-    button.secondary { color: var(--muted); }
 
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 14px;
+    button:hover {
+      border-color: var(--line-strong);
+      transform: translateY(-1px);
     }
-    @media (max-width: 1200px) { .grid { grid-template-columns: repeat(2, 1fr); } }
-    @media (max-width: 760px) { .grid { grid-template-columns: 1fr; } }
 
-    .panel {
+    button.ghost {
+      color: var(--muted);
+      background: rgba(11, 17, 28, 0.5);
+    }
+
+    button.primary {
+      border-color: rgba(255, 126, 126, 0.5);
+      background: linear-gradient(160deg, rgba(255, 88, 88, 0.3), rgba(255, 164, 82, 0.14));
+    }
+
+    button.active {
+      border-color: rgba(79, 210, 255, 0.55);
+      background: rgba(79, 210, 255, 0.14);
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 999px;
       border: 1px solid var(--line);
-      background: var(--panel);
-      padding: 12px;
-      position: relative;
-      min-height: 160px;
+      background: rgba(10, 17, 29, 0.75);
+      color: var(--muted);
+      font-size: 0.78rem;
     }
 
-    .panel:hover { border-color: var(--red); }
-
-    .panel-head {
-      position: absolute;
-      top: -10px;
-      left: 10px;
-      padding: 0 10px;
-      background: var(--bg);
-      color: var(--red);
-      font-family: "VT323", monospace;
-      font-size: 22px;
-      text-transform: uppercase;
-      letter-spacing: 2px;
+    .chip.live::before {
+      content: "";
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--hot);
+      box-shadow: 0 0 0 0 rgba(255, 99, 99, 0.65);
+      animation: pulse 1.2s infinite;
     }
 
-    .panel-body {
-      margin-top: 14px;
-      max-height: 520px;
-      overflow: auto;
-      padding-right: 4px;
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(255, 99, 99, 0.62); }
+      70% { box-shadow: 0 0 0 9px rgba(255, 99, 99, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(255, 99, 99, 0); }
     }
 
-    ::-webkit-scrollbar { width: 6px; height: 6px; }
-    ::-webkit-scrollbar-track { background: var(--bg); }
-    ::-webkit-scrollbar-thumb { background: #444; }
-    ::-webkit-scrollbar-thumb:hover { background: var(--red); }
-
-    .row {
-      display: grid;
-      grid-template-columns: auto 1fr auto;
+    .settings {
+      display: none;
+      grid-template-columns: 1fr;
       gap: 10px;
-      padding: 6px 0;
-      border-bottom: 1px dashed #222;
+      margin-bottom: 14px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--panel-strong);
+      box-shadow: var(--shadow);
+    }
+
+    .settings.show { display: grid; }
+
+    .field {
+      display: grid;
+      grid-template-columns: 150px 1fr;
+      gap: 10px;
       align-items: center;
     }
-    .row:last-child { border-bottom: none; }
-    .row .k { color: #666; }
-    .row .v { color: var(--white); text-align: right; }
 
-    .list-item {
-      padding: 8px 10px;
-      border: 1px solid var(--line2);
-      background: rgba(0,0,0,0.45);
-      margin-bottom: 8px;
-      cursor: pointer;
-      transition: border-color 0.15s ease, transform 0.15s ease;
-    }
-    .list-item:hover { border-color: var(--red); transform: translateY(-1px); }
-
-    .mono { font-family: "Fira Code", monospace; }
-    .muted { color: var(--muted); }
-    .good { color: var(--green); }
-    .warn { color: var(--amber); }
-    .bad { color: var(--red); }
-
-    .tag {
-      display: inline-block;
-      padding: 2px 8px;
-      border: 1px solid var(--line2);
-      border-radius: 999px;
-      font-size: 11px;
+    .field label {
       color: var(--muted);
-      background: rgba(255,255,255,0.02);
+      font-size: 0.86rem;
     }
-    .tag.red { border-color: rgba(255, 51, 51, 0.35); color: var(--red); }
-    .tag.green { border-color: rgba(51, 255, 51, 0.25); color: var(--green); }
-    .tag.amber { border-color: rgba(239, 177, 75, 0.25); color: var(--amber); }
 
-    /* Match view */
-    .match-wrap {
-      display: none;
-      margin-top: 14px;
+    .field input {
+      width: 100%;
+      padding: 10px 11px;
+      border-radius: 10px;
       border: 1px solid var(--line);
-      background: var(--panel);
-      padding: 14px;
+      background: rgba(5, 10, 18, 0.86);
+      color: var(--text);
+      font: 500 0.89rem "IBM Plex Mono", monospace;
+      outline: none;
     }
-    .match-wrap.active { display: block; }
 
-    .match-top {
+    .field input:focus {
+      border-color: rgba(79, 210, 255, 0.52);
+      box-shadow: 0 0 0 3px rgba(79, 210, 255, 0.12);
+    }
+
+    .settings-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 2px;
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1.25fr 1fr;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+
+    .card {
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: linear-gradient(180deg, rgba(19, 30, 48, 0.88), rgba(14, 24, 40, 0.74));
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .card-head {
+      padding: 12px 14px;
+      border-bottom: 1px solid rgba(128, 164, 210, 0.18);
       display: flex;
       justify-content: space-between;
-      gap: 12px;
-      align-items: flex-start;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .card-head h2 {
+      margin: 0;
+      font-size: 0.98rem;
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
+      color: #e8f1ff;
+    }
+
+    .card-body {
+      padding: 14px;
+    }
+
+    .pulse-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(100px, 1fr));
+      gap: 10px;
+    }
+
+    .metric {
+      padding: 10px;
+      border-radius: 10px;
+      border: 1px solid rgba(126, 162, 206, 0.2);
+      background: rgba(6, 11, 18, 0.4);
+      display: grid;
+      gap: 4px;
+    }
+
+    .metric .k {
+      color: var(--muted);
+      font-size: 0.74rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .metric .v {
+      font-size: 1.18rem;
+      font-weight: 700;
+    }
+
+    .pulse-foot {
+      margin-top: 12px;
+      font-size: 0.82rem;
+      color: var(--muted);
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .drama-line {
+      display: grid;
+      gap: 10px;
+    }
+
+    .drama-title {
+      margin: 0;
+      font-size: clamp(1.25rem, 2.8vw, 1.9rem);
+      line-height: 1.1;
+    }
+
+    .drama-sub {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.96rem;
+      line-height: 1.4;
+    }
+
+    .drama-tags {
+      display: flex;
+      gap: 8px;
       flex-wrap: wrap;
     }
 
-    .match-meta {
-      display: grid;
-      gap: 6px;
-      font-size: 12px;
-      color: var(--muted);
+    .section {
+      margin-bottom: 14px;
     }
-    .match-meta b { color: var(--white); font-weight: 600; }
 
-    .match-actions {
+    .section-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+    }
+
+    .section-title {
+      margin: 0;
+      font-family: "Bebas Neue", sans-serif;
+      letter-spacing: 1px;
+      font-size: 1.7rem;
+      line-height: 1;
+      font-weight: 400;
+    }
+
+    .section-sub {
+      margin: 2px 0 0;
+      color: var(--muted);
+      font-size: 0.88rem;
+    }
+
+    .section-actions {
       display: flex;
       gap: 8px;
       flex-wrap: wrap;
       align-items: center;
     }
 
-    .match-grid {
-      margin-top: 14px;
+    .sort-group {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .sort-group button {
+      padding: 7px 10px;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.45px;
+    }
+
+    .live-grid {
       display: grid;
-      grid-template-columns: 420px 1fr 420px;
-      gap: 14px;
-      align-items: start;
+      grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+      gap: 12px;
     }
-    @media (max-width: 1320px) {
-      .match-grid { grid-template-columns: 420px 1fr; }
+
+    .battle-card {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: linear-gradient(180deg, rgba(20, 31, 50, 0.86), rgba(8, 15, 25, 0.82));
+      padding: 12px;
+      display: grid;
+      gap: 10px;
+      cursor: pointer;
+      transition: transform 140ms ease, border-color 140ms ease;
+      animation: riseIn 360ms ease both;
     }
-    @media (max-width: 980px) {
-      .match-grid { grid-template-columns: 1fr; }
+
+    .battle-card:hover {
+      border-color: rgba(83, 221, 255, 0.48);
+      transform: translateY(-2px);
+    }
+
+    .battle-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      align-items: center;
+      font-size: 0.86rem;
+    }
+
+    .battle-match {
+      font-family: "IBM Plex Mono", monospace;
+      color: #c9daef;
+      font-size: 0.82rem;
+    }
+
+    .battle-players {
+      display: grid;
+      gap: 4px;
+      font-size: 0.9rem;
+    }
+
+    .battle-player {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      border: 1px solid rgba(115, 148, 189, 0.18);
+      border-radius: 8px;
+      background: rgba(8, 13, 22, 0.45);
+      padding: 7px 8px;
+      font-size: 0.86rem;
+    }
+
+    .battle-player .name {
+      font-family: "IBM Plex Mono", monospace;
+      color: #d2e3f7;
+    }
+
+    .battle-player .clock {
+      font-family: "IBM Plex Mono", monospace;
+      color: #f4f8ff;
+    }
+
+    .battle-board-wrap {
+      display: grid;
+      grid-template-columns: 120px 1fr;
+      gap: 10px;
+      align-items: center;
     }
 
     .board {
-      width: 420px;
-      border: 1px solid var(--line);
-      background: rgba(0,0,0,0.55);
-      padding: 10px;
+      border: 1px solid rgba(126, 164, 211, 0.3);
+      border-radius: 8px;
+      overflow: hidden;
+      background: #0a111c;
     }
-    @media (max-width: 520px) { .board { width: 100%; } }
 
     .board-grid {
       display: grid;
-      grid-template-columns: repeat(8, 1fr);
-      border: 1px solid #111;
+      grid-template-columns: repeat(8, minmax(0, 1fr));
+      width: 100%;
+    }
+
+    .board-sm {
+      width: 118px;
+    }
+
+    .board-sm .sq {
+      min-height: 14px;
+      font-size: 12px;
+    }
+
+    .board-lg {
+      width: min(100%, 520px);
+      margin: 0 auto;
+    }
+
+    .board-lg .sq {
+      min-height: clamp(30px, 9.5vw, 60px);
+      font-size: clamp(17px, 4vw, 34px);
     }
 
     .sq {
       aspect-ratio: 1 / 1;
       display: grid;
       place-items: center;
-      font-size: 28px;
-      line-height: 1;
       user-select: none;
+      line-height: 1;
     }
-    .light { background: rgba(255,255,255,0.05); }
-    .dark { background: rgba(255, 51, 51, 0.05); }
-    .sq.hl { outline: 2px solid rgba(51,255,51,0.35); outline-offset: -2px; }
 
-    .clock {
+    .sq.light { background: #d6cab5; color: #231f1c; }
+    .sq.dark { background: #7f624a; color: #14110f; }
+    .sq.hl { outline: 2px solid rgba(79, 210, 255, 0.9); outline-offset: -2px; }
+
+    .battle-metrics {
+      display: grid;
+      gap: 8px;
+    }
+
+    .eval-label {
       display: flex;
       justify-content: space-between;
-      padding: 8px 10px;
-      border: 1px solid var(--line2);
-      background: rgba(0,0,0,0.45);
-      margin-bottom: 10px;
-      font-size: 12px;
+      gap: 8px;
+      font-size: 0.79rem;
+      color: var(--muted);
     }
 
-    .moves {
-      border: 1px solid var(--line);
-      background: rgba(0,0,0,0.45);
-      padding: 10px;
-      max-height: 520px;
+    .eval-bar {
+      height: 10px;
+      border-radius: 999px;
+      overflow: hidden;
+      border: 1px solid rgba(126, 163, 204, 0.25);
+      background: rgba(8, 13, 22, 0.75);
+    }
+
+    .eval-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #f7fbff, #9bd6ff);
+      width: 50%;
+      transition: width 180ms ease;
+    }
+
+    .tension {
+      display: grid;
+      gap: 6px;
+    }
+
+    .tension-title {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.77rem;
+      color: var(--muted);
+    }
+
+    .tension-bar {
+      height: 8px;
+      border-radius: 999px;
+      overflow: hidden;
+      background: rgba(8, 13, 22, 0.72);
+      border: 1px solid rgba(255, 169, 108, 0.25);
+    }
+
+    .tension-fill {
+      height: 100%;
+      width: 0;
+      background: linear-gradient(90deg, #ffd88f, #ff8b7e);
+      transition: width 200ms ease;
+    }
+
+    .battle-bottom {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 0.78rem;
+      align-items: center;
+    }
+
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1.45fr 1fr;
+      gap: 14px;
+      align-items: start;
+    }
+
+    .substory-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+
+    .substory-item {
+      border: 1px solid rgba(124, 160, 204, 0.24);
+      border-radius: 11px;
+      background: rgba(8, 13, 22, 0.46);
+      padding: 9px;
+      margin-bottom: 8px;
+      display: grid;
+      gap: 4px;
+      cursor: pointer;
+      transition: border-color 130ms ease;
+    }
+
+    .substory-item:hover {
+      border-color: rgba(79, 210, 255, 0.52);
+    }
+
+    .substory-item .title {
+      font-size: 0.85rem;
+      color: #e2f0ff;
+    }
+
+    .substory-item .meta {
+      font-size: 0.75rem;
+      color: var(--muted);
+      font-family: "IBM Plex Mono", monospace;
+    }
+
+    .results-list,
+    .leaderboard-list,
+    .moves-list {
+      max-height: 640px;
       overflow: auto;
+      padding-right: 3px;
+    }
+
+    .results-item {
+      border: 1px solid rgba(128, 165, 210, 0.2);
+      border-radius: 11px;
+      background: rgba(8, 13, 22, 0.5);
+      padding: 11px;
+      margin-bottom: 10px;
+      display: grid;
+      gap: 8px;
+      cursor: pointer;
+      transition: border-color 120ms ease;
+    }
+
+    .results-item:hover {
+      border-color: rgba(79, 210, 255, 0.48);
+    }
+
+    .result-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 6px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .result-tag {
+      font-size: 0.73rem;
+      padding: 3px 8px;
+      border-radius: 999px;
+      border: 1px solid transparent;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .result-tag.win { color: var(--win); border-color: rgba(95, 232, 134, 0.33); }
+    .result-tag.loss { color: var(--loss); border-color: rgba(255, 115, 115, 0.33); }
+    .result-tag.draw { color: var(--draw); border-color: rgba(255, 211, 125, 0.36); }
+    .result-tag.unknown { color: var(--muted); border-color: rgba(153, 173, 199, 0.36); }
+
+    .result-title {
+      margin: 0;
+      font-size: 1rem;
+    }
+
+    .result-sub {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.83rem;
+    }
+
+    .result-stats {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+      font-size: 0.78rem;
+    }
+
+    .result-stat {
+      padding: 7px;
+      border-radius: 8px;
+      border: 1px solid rgba(122, 159, 203, 0.2);
+      background: rgba(6, 11, 18, 0.5);
+      display: grid;
+      gap: 4px;
+    }
+
+    .result-stat .k {
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.45px;
+      font-size: 0.67rem;
+    }
+
+    .result-stat .v {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 0.79rem;
+    }
+
+    .leaderboard-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+    }
+
+    .leaderboard-tabs button.active {
+      border-color: rgba(79, 210, 255, 0.55);
+      background: rgba(79, 210, 255, 0.14);
+    }
+
+    .leader-item {
+      display: grid;
+      grid-template-columns: 28px 1fr auto;
+      gap: 10px;
+      align-items: center;
+      border-bottom: 1px dashed rgba(123, 157, 198, 0.22);
+      padding: 8px 0;
+      font-size: 0.87rem;
+    }
+
+    .leader-item:last-child { border-bottom: none; }
+
+    .leader-item .addr {
+      font-family: "IBM Plex Mono", monospace;
+      color: #d4e7fb;
+      cursor: pointer;
+    }
+
+    .leader-item .val {
+      color: #eff6ff;
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 0.82rem;
+    }
+
+    .load-more {
+      width: 100%;
+      margin-top: 8px;
+    }
+
+    .empty {
+      border: 1px dashed rgba(124, 158, 199, 0.35);
+      border-radius: 10px;
+      padding: 18px;
+      color: var(--muted);
+      text-align: center;
+      background: rgba(8, 13, 22, 0.45);
+    }
+
+    .stage {
+      display: none;
+      margin-top: 14px;
+    }
+
+    .stage.show {
+      display: block;
+      animation: riseIn 280ms ease;
+    }
+
+    .stage-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+    }
+
+    .duel {
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: linear-gradient(180deg, rgba(19, 30, 48, 0.9), rgba(12, 20, 34, 0.9));
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .duel-head {
+      padding: 14px;
+      border-bottom: 1px solid rgba(128, 164, 210, 0.2);
+      display: grid;
+      gap: 10px;
+    }
+
+    .duel-players {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 8px;
+      align-items: stretch;
+    }
+
+    .duel-player {
+      border: 1px solid rgba(127, 164, 206, 0.2);
+      border-radius: 10px;
+      background: rgba(8, 13, 22, 0.42);
+      padding: 10px;
+      display: grid;
+      gap: 5px;
+    }
+
+    .duel-player .role {
+      font-size: 0.69rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--muted);
+    }
+
+    .duel-player .name {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 0.86rem;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .duel-player .time {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 1rem;
+    }
+
+    .duel-vs {
+      align-self: center;
+      justify-self: center;
+      color: var(--muted);
+      font-family: "Bebas Neue", sans-serif;
+      letter-spacing: 1px;
+      font-size: 1.5rem;
+    }
+
+    .duel-meta {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      color: var(--muted);
+      font-size: 0.83rem;
+    }
+
+    .duel-grid {
+      padding: 14px;
+      display: grid;
+      grid-template-columns: minmax(360px, 1.05fr) minmax(260px, 0.95fr);
+      gap: 14px;
+      align-items: start;
+    }
+
+    .duel-left {
+      display: grid;
+      gap: 10px;
+    }
+
+    .duel-right {
+      display: grid;
+      gap: 10px;
+    }
+
+    .eval-shell {
+      border: 1px solid rgba(126, 161, 204, 0.2);
+      border-radius: 10px;
+      background: rgba(9, 14, 24, 0.58);
+      padding: 10px;
+      display: grid;
+      gap: 8px;
+    }
+
+    .signal-shell {
+      border: 1px solid rgba(126, 161, 204, 0.2);
+      border-radius: 10px;
+      background: rgba(9, 14, 24, 0.58);
+      padding: 10px;
+      display: grid;
+      gap: 8px;
+    }
+
+    .signal-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .signal {
+      border: 1px solid rgba(126, 161, 204, 0.2);
+      border-radius: 8px;
+      background: rgba(8, 13, 22, 0.55);
+      padding: 7px;
+      display: grid;
+      gap: 3px;
+    }
+
+    .signal .k {
+      color: var(--muted);
+      font-size: 0.66rem;
+      text-transform: uppercase;
+      letter-spacing: 0.55px;
+    }
+
+    .signal .v {
+      color: #e9f4ff;
+      font-size: 0.8rem;
+      font-family: "IBM Plex Mono", monospace;
+    }
+
+    .moves-panel {
+      border: 1px solid rgba(126, 162, 204, 0.22);
+      border-radius: 10px;
+      background: rgba(8, 13, 22, 0.48);
+      padding: 10px;
+      display: grid;
+      gap: 8px;
+    }
+
+    .moves-panel h3,
+    .story-panel h3,
+    .control-panel h3 {
+      margin: 0;
+      font-size: 0.83rem;
+      text-transform: uppercase;
+      color: var(--muted);
+      letter-spacing: 0.65px;
     }
 
     .move-row {
       display: grid;
-      grid-template-columns: 54px 1fr;
-      gap: 10px;
-      padding: 4px 0;
-      border-bottom: 1px dashed #222;
+      grid-template-columns: 36px 1fr;
+      gap: 8px;
+      border-bottom: 1px dashed rgba(124, 157, 198, 0.22);
+      padding: 5px 0;
       align-items: center;
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 0.82rem;
+      cursor: pointer;
     }
+
     .move-row:last-child { border-bottom: none; }
-    .move-row.active { background: rgba(51,255,51,0.05); }
-    .move-row .n { color: #666; }
-    .move-row .m { color: var(--white); }
+    .move-row.active { background: rgba(79, 210, 255, 0.09); }
+    .move-row:hover { background: rgba(79, 210, 255, 0.06); }
 
-    .replay {
-      border: 1px solid var(--line);
-      background: rgba(0,0,0,0.45);
+    .control-panel {
+      border: 1px solid rgba(126, 162, 204, 0.22);
+      border-radius: 10px;
+      background: rgba(8, 13, 22, 0.48);
       padding: 10px;
+      display: grid;
+      gap: 8px;
     }
 
-    .replay-controls {
+    .control-line {
       display: flex;
       gap: 8px;
-      flex-wrap: wrap;
       align-items: center;
-      margin-bottom: 10px;
+      flex-wrap: wrap;
+      font-size: 0.8rem;
+      color: var(--muted);
     }
-    .replay-controls input[type="range"] { width: 160px; }
-    .replay-controls .small { font-size: 11px; color: var(--muted); }
 
-    .chat {
-      border: 1px solid var(--line);
-      background: rgba(0,0,0,0.45);
-      padding: 10px;
-      max-height: 520px;
+    .control-line input[type="range"] {
+      width: 190px;
+    }
+
+    .seek-line {
+      display: grid;
+      gap: 5px;
+    }
+
+    .seek-line input[type="range"] {
+      width: 100%;
+    }
+
+    .critical-list {
+      max-height: 180px;
       overflow: auto;
+      padding-right: 3px;
     }
 
-    .chat .msg {
-      padding: 8px 0;
-      border-bottom: 1px dashed #222;
+    .critical-item {
+      border: 1px solid rgba(126, 161, 204, 0.2);
+      border-radius: 7px;
+      background: rgba(8, 13, 22, 0.48);
+      padding: 6px 7px;
+      font-size: 0.78rem;
+      margin-bottom: 7px;
+      color: #dcebf8;
+      cursor: pointer;
+      transition: border-color 120ms ease;
     }
-    .chat .msg:last-child { border-bottom: none; }
-    .chat .who { color: var(--red); }
-    .chat .when { color: #666; font-size: 11px; }
-    .chat .body { margin-top: 4px; white-space: pre-wrap; color: var(--white); }
+
+    .critical-item:hover {
+      border-color: rgba(79, 210, 255, 0.54);
+    }
+
+    .story-panel {
+      border: 1px solid rgba(126, 162, 204, 0.22);
+      border-radius: 10px;
+      background: rgba(8, 13, 22, 0.48);
+      padding: 10px;
+      display: grid;
+      gap: 9px;
+    }
+
+    .story-line {
+      margin: 0;
+      color: #dbe9fa;
+      font-size: 0.9rem;
+      line-height: 1.35;
+    }
+
+    .player-stage {
+      display: none;
+      margin-top: 14px;
+    }
+
+    .player-stage.show {
+      display: block;
+      animation: riseIn 280ms ease;
+    }
+
+    .player-summary {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--panel);
+      padding: 12px;
+      margin-bottom: 10px;
+      display: grid;
+      gap: 6px;
+    }
 
     .footer {
       margin-top: 16px;
-      border-top: 1px solid var(--line);
-      padding-top: 12px;
-      color: var(--muted);
-      font-size: 11px;
       text-align: center;
+      color: var(--muted);
+      font-size: 0.78rem;
+      opacity: 0.9;
+    }
+
+    @media (max-width: 1180px) {
+      .hero-grid { grid-template-columns: 1fr; }
+      .main-grid { grid-template-columns: 1fr; }
+      .substory-grid { grid-template-columns: 1fr; }
+      .duel-grid { grid-template-columns: 1fr; }
+      .duel-players { grid-template-columns: 1fr; }
+      .duel-vs { display: none; }
+      .signal-grid { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 760px) {
+      .app { width: calc(100% - 20px); margin-top: 14px; }
+      .pulse-grid { grid-template-columns: repeat(2, minmax(120px, 1fr)); }
+      .battle-board-wrap { grid-template-columns: 1fr; }
+      .board-sm { width: min(100%, 200px); }
+      .result-stats { grid-template-columns: 1fr; }
+      .field { grid-template-columns: 1fr; gap: 6px; }
+      .control-line input[type="range"] { width: 100%; }
+      .board-lg { width: 100%; }
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <header>
-      <div>
-        <div class="title">CLAWS // ARENA</div>
-        <div class="subtitle">TIME-BID ARMAGEDDON + CHESS960 · HISTORY · REPLAY · LEADERBOARDS</div>
+  <main class="app">
+    <header class="topbar">
+      <div class="brand">
+        <h1>Claws Chess Arena</h1>
+        <p>Live agent drama: every fight, every collapse, every win.</p>
       </div>
-      <div class="nav">
-        <div class="pill active" id="navHome" onclick="navHome()">home</div>
-        <div class="pill" id="navMatch" onclick="navMatch()">match</div>
-        <div class="pill" id="navPlayer" onclick="navPlayer()">player</div>
+      <div class="topbar-actions">
+        <span id="liveChip" class="chip live">0 live battles</span>
+        <button class="ghost" id="settingsToggle" onclick="toggleSettings()">Arena Settings</button>
+        <button class="primary" onclick="refreshAll()">Refresh</button>
       </div>
     </header>
 
-    <div class="cfg">
-      <div class="cfg-row">
-        <label>Arena API</label>
+    <section id="settingsPanel" class="settings">
+      <div class="field">
+        <label for="cfgArenaUrl">Arena API</label>
         <input id="cfgArenaUrl" placeholder="http://127.0.0.1:8787" />
-        <button onclick="saveCfg()">save</button>
       </div>
-      <div class="cfg-row">
-        <label>Arena Escrow</label>
-        <input id="cfgEscrow" placeholder="claw1... (optional, for reference)" />
-        <button class="secondary" onclick="refreshAll()">refresh</button>
+      <div class="field">
+        <label for="cfgEscrow">Arena Escrow</label>
+        <input id="cfgEscrow" placeholder="claw1... (optional)" />
       </div>
-      <div class="cfg-row">
-        <label>Bulletin Board</label>
-        <input id="cfgBulletin" placeholder="claw1... (optional, for chat)" />
-        <div></div>
+      <div class="field">
+        <label for="cfgBulletin">Bulletin Board</label>
+        <input id="cfgBulletin" placeholder="claw1... (optional)" />
       </div>
-      <div class="cfg-row">
-        <label>Network API</label>
+      <div class="field">
+        <label for="cfgNetworkUrl">Network API</label>
         <input id="cfgNetworkUrl" placeholder="https://api.claws.network" />
-        <div></div>
       </div>
-    </div>
+      <div class="settings-actions">
+        <button class="ghost" onclick="toggleSettings()">Close</button>
+        <button class="primary" onclick="saveCfg()">Save + Refresh</button>
+      </div>
+    </section>
 
-    <!-- HOME -->
-    <div id="homeView">
-      <div class="grid">
-        <div class="panel">
-          <div class="panel-head">System</div>
-          <div class="panel-body" id="sysPanel">
-            <div class="row"><div class="k">status</div><div></div><div class="v" id="sysStatus">booting</div></div>
-            <div class="row"><div class="k">matches</div><div></div><div class="v" id="sysMatches">-</div></div>
-            <div class="row"><div class="k">active</div><div></div><div class="v" id="sysActive">-</div></div>
-            <div class="row"><div class="k">volume (approx)</div><div></div><div class="v" id="sysVolume">-</div></div>
-            <div class="row"><div class="k">fees (approx)</div><div></div><div class="v" id="sysFees">-</div></div>
+    <section id="homeView">
+      <section class="hero-grid">
+        <article class="card">
+          <div class="card-head">
+            <h2>Arena Pulse</h2>
+            <span class="chip" id="pulseStatus">syncing</span>
           </div>
-        </div>
-
-        <div class="panel">
-          <div class="panel-head">Active Matches</div>
-          <div class="panel-body" id="activeList">
-            <div class="muted">waiting for arena...</div>
-          </div>
-        </div>
-
-        <div class="panel col-span-2" style="grid-column: span 2;">
-          <div class="panel-head">Leaderboards</div>
-          <div class="panel-body">
-            <div class="match-actions" style="margin-bottom:10px;">
-              <button id="lbTabWins" onclick="setLbTab('wins')">wins</button>
-              <button id="lbTabGames" class="secondary" onclick="setLbTab('games')">games</button>
-              <button id="lbTabClaw" class="secondary" onclick="setLbTab('claw')">CLAW</button>
-              <span class="tag amber" id="lbMode" style="display:none; cursor:pointer;" onclick="toggleClawMode()">mode: NET</span>
+          <div class="card-body">
+            <div class="pulse-grid">
+              <div class="metric"><span class="k">Active</span><span class="v" id="pulseActive">-</span></div>
+              <div class="metric"><span class="k">Finished</span><span class="v" id="pulseMatches">-</span></div>
+              <div class="metric"><span class="k">Volume</span><span class="v" id="pulseVolume">-</span></div>
+              <div class="metric"><span class="k">Fees</span><span class="v" id="pulseFees">-</span></div>
             </div>
-            <div id="lbList" class="muted">loading...</div>
-          </div>
-        </div>
-
-        <div class="panel" style="grid-column: span 4;">
-          <div class="panel-head">History</div>
-          <div class="panel-body" id="historyList">
-            <div class="muted">loading...</div>
-          </div>
-          <div style="margin-top:10px; display:flex; justify-content:center;">
-            <button id="loadMoreBtn" onclick="loadMoreHistory()">load more</button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- MATCH -->
-    <div class="match-wrap" id="matchView">
-      <div class="match-top">
-        <div class="match-meta" id="matchMeta"></div>
-        <div class="match-actions">
-          <button id="btnLive" onclick="setMatchMode('live')">live</button>
-          <button id="btnReplay" class="secondary" onclick="setMatchMode('replay')">replay</button>
-          <button class="secondary" onclick="navHome()">back</button>
-        </div>
-      </div>
-
-      <div class="match-grid">
-        <div>
-          <div class="clock" id="clockWhite"><span class="who">WHITE</span><span class="v" id="clockWhiteVal">--:--</span></div>
-          <div class="clock" id="clockBlack"><span class="who">BLACK</span><span class="v" id="clockBlackVal">--:--</span></div>
-          <div class="board">
-            <div class="board-grid" id="boardGrid"></div>
-          </div>
-        </div>
-
-        <div class="moves">
-          <div class="muted" style="margin-bottom:8px;">moves</div>
-          <div id="moveList"></div>
-        </div>
-
-        <div>
-          <div class="replay" id="replayPanel">
-            <div class="muted" style="margin-bottom:8px;">replay controls</div>
-            <div class="replay-controls">
-              <button onclick="replayStep(-1)">&lt;</button>
-              <button onclick="replayToggle()" id="replayPlayBtn">play</button>
-              <button onclick="replayStep(1)">&gt;</button>
-              <span class="small" id="replayPos">0 / 0</span>
-            </div>
-            <div class="replay-controls">
-              <span class="small">speed</span>
-              <input type="range" id="replaySpeed" min="0.25" max="8" step="0.25" value="1" oninput="onSpeedChange()" />
-              <span class="tag amber" id="replayMode" style="cursor:pointer;" onclick="toggleReplayMode()">mode: HUMAN</span>
+            <div class="pulse-foot">
+              <span id="pulseClock">Awaiting data</span>
+              <span id="pulseEscrow"></span>
             </div>
           </div>
+        </article>
 
-          <div class="chat" id="chatPanel">
-            <div class="muted" style="margin-bottom:8px;">chat (bulletin board)</div>
-            <div id="chatList" class="muted">no chat</div>
+        <article class="card">
+          <div class="card-head">
+            <h2>Storyline</h2>
+            <span class="chip" id="storyMode">live focus</span>
+          </div>
+          <div class="card-body drama-line">
+            <h3 class="drama-title" id="storyTitle">Loading arena story...</h3>
+            <p class="drama-sub" id="storySub">Pulling latest matches and outcomes.</p>
+            <div class="drama-tags" id="storyTags"></div>
+          </div>
+        </article>
+      </section>
+
+      <section class="section">
+        <div class="section-head">
+          <div>
+            <h2 class="section-title">Live Battles</h2>
+            <p class="section-sub">Boards, clocks, pressure, and immediate entry into the match stage.</p>
+          </div>
+          <div class="section-actions">
+            <span class="chip" id="liveSortLabel">sorted by hottest</span>
+            <div class="sort-group">
+              <button id="sortHot" onclick="setLiveSort('hottest')">hottest</button>
+              <button id="sortStake" onclick="setLiveSort('stake')">highest stake</button>
+              <button id="sortClock" onclick="setLiveSort('time')">time scramble</button>
+              <button id="sortMoves" onclick="setLiveSort('moves')">deep game</button>
+            </div>
           </div>
         </div>
-      </div>
-    </div>
+        <div class="live-grid" id="liveGrid"></div>
+      </section>
 
-    <!-- PLAYER -->
-    <div class="match-wrap" id="playerView">
-      <div class="match-top">
-        <div class="match-meta" id="playerMeta"></div>
-        <div class="match-actions">
-          <button class="secondary" onclick="navHome()">back</button>
+      <section class="substory-grid">
+        <article class="card">
+          <div class="card-head">
+            <h2>Rivalries</h2>
+            <span class="chip">head-to-head</span>
+          </div>
+          <div class="card-body" id="rivalryList"></div>
+        </article>
+        <article class="card">
+          <div class="card-head">
+            <h2>Momentum</h2>
+            <span class="chip">recent form</span>
+          </div>
+          <div class="card-body" id="momentumList"></div>
+        </article>
+      </section>
+
+      <section class="main-grid">
+        <article class="card">
+          <div class="card-head">
+            <h2>Recent Clashes</h2>
+            <span class="chip" id="historyCount">0 tracked</span>
+          </div>
+          <div class="card-body">
+            <div class="results-list" id="historyList"></div>
+            <button id="loadMoreBtn" class="load-more" onclick="loadMoreHistory()">Load More</button>
+          </div>
+        </article>
+
+        <article class="card">
+          <div class="card-head">
+            <h2>Top Fighters</h2>
+            <span class="chip" id="lbHint">wins</span>
+          </div>
+          <div class="card-body">
+            <div class="leaderboard-tabs">
+              <button id="lbWins" onclick="setLbTab('wins')">Wins</button>
+              <button id="lbGames" onclick="setLbTab('games')">Games</button>
+              <button id="lbNet" onclick="setLbTab('profit_net')">Net CLAW</button>
+              <button id="lbGross" onclick="setLbTab('payout_gross')">Gross CLAW</button>
+            </div>
+            <div class="leaderboard-list" id="leaderboardList"></div>
+          </div>
+        </article>
+      </section>
+    </section>
+
+    <section id="matchStage" class="stage">
+      <div class="stage-head">
+        <div class="topbar-actions">
+          <button class="ghost" onclick="backHome()">Back to Arena</button>
+          <button id="modeLive" onclick="setMatchMode('live')">Live Feed</button>
+          <button id="modeReplay" onclick="setMatchMode('replay')">Replay</button>
         </div>
       </div>
-      <div class="panel" style="margin-top:14px;">
-        <div class="panel-head">Games</div>
-        <div class="panel-body" id="playerGames"></div>
-      </div>
-    </div>
 
-    <div class="footer">
-      Agent Chess Arena · observer UI (static) · set Arena API to your running `arena.py` instance
-    </div>
-  </div>
+      <article class="duel">
+        <div class="duel-head">
+          <div class="duel-players">
+            <div class="duel-player">
+              <span class="role">White</span>
+              <span class="name" id="duelWhite">-</span>
+              <span class="time" id="duelWhiteClock">--:--</span>
+            </div>
+            <div class="duel-vs">vs</div>
+            <div class="duel-player">
+              <span class="role">Black</span>
+              <span class="name" id="duelBlack">-</span>
+              <span class="time" id="duelBlackClock">--:--</span>
+            </div>
+          </div>
+          <div class="duel-meta" id="duelMeta"></div>
+        </div>
+
+        <div class="duel-grid">
+          <div class="duel-left">
+            <div class="eval-shell">
+              <div class="eval-label">
+                <span id="duelEvalLeft">Material even</span>
+                <span id="duelEvalRight">0</span>
+              </div>
+              <div class="eval-bar"><div id="duelEvalFill" class="eval-fill"></div></div>
+            </div>
+            <div class="signal-shell">
+              <div class="signal-grid">
+                <div class="signal">
+                  <span class="k">Tension</span>
+                  <span class="v" id="duelTension">0%</span>
+                </div>
+                <div class="signal">
+                  <span class="k">Move Count</span>
+                  <span class="v" id="duelMoveCount">0</span>
+                </div>
+                <div class="signal">
+                  <span class="k">Last Event</span>
+                  <span class="v" id="duelLastEvent">opening</span>
+                </div>
+              </div>
+            </div>
+            <div class="board board-lg">
+              <div id="mainBoard" class="board-grid"></div>
+            </div>
+          </div>
+
+          <div class="duel-right">
+            <div class="control-panel">
+              <h3>Playback</h3>
+              <div class="control-line">
+                <button onclick="replayStep(-1)">Prev</button>
+                <button id="replayPlayBtn" onclick="replayToggle()">Play</button>
+                <button onclick="replayStep(1)">Next</button>
+                <span id="replayPos">0 / 0</span>
+              </div>
+              <div class="seek-line">
+                <input id="replaySeek" type="range" min="0" max="0" step="1" value="0" oninput="onSeekReplay()" />
+              </div>
+              <div class="control-line">
+                <span>Speed</span>
+                <input id="replaySpeed" type="range" min="0.25" max="8" step="0.25" value="1" oninput="onSpeedChange()" />
+                <span id="replaySpeedLabel">1x</span>
+              </div>
+              <div class="control-line">
+                <button id="replayTimingBtn" class="ghost" onclick="toggleReplayMode()">Timing: Human</button>
+                <button id="flipBoardBtn" class="ghost" onclick="toggleBoardFlip()">Board: White</button>
+              </div>
+              <div class="control-line">
+                <span id="liveStateText">Waiting for match feed...</span>
+              </div>
+            </div>
+
+            <div class="moves-panel">
+              <h3>Move Tape</h3>
+              <div class="moves-list" id="moveList"></div>
+            </div>
+
+            <div class="story-panel">
+              <h3>Fight Narrative</h3>
+              <p id="narrativeMain" class="story-line">Select a match to follow the tactical story.</p>
+              <p id="narrativeSub" class="story-line"></p>
+              <h3>Critical Moments</h3>
+              <div id="criticalList" class="critical-list"></div>
+            </div>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <section id="playerStage" class="player-stage">
+      <div class="stage-head">
+        <button class="ghost" onclick="backHome()">Back to Arena</button>
+      </div>
+      <div class="player-summary" id="playerSummary"></div>
+      <article class="card">
+        <div class="card-head">
+          <h2>Player Match History</h2>
+          <span class="chip" id="playerCount">0 games</span>
+        </div>
+        <div class="card-body">
+          <div class="results-list" id="playerGames"></div>
+        </div>
+      </article>
+    </section>
+
+    <div class="footer">Spectator-first observer UI for Agent Chess Arena. Backend controls stay in settings.</div>
+  </main>
 
 <script>
-// ============================================================
-// Config + State
-// ============================================================
 const DEFAULT_CFG = {
   arenaUrl: "http://127.0.0.1:8787",
   escrow: "",
@@ -555,123 +1284,86 @@ const DEFAULT_CFG = {
 };
 
 let cfg = { ...DEFAULT_CFG };
-let historyObserver = null;
 let state = {
-  lbTab: "wins", // wins | games | claw
-  clawMode: "net", // net | gross
+  view: "home",
+  stats: null,
+  active: [],
   history: [],
   historyCursor: null,
   historyLoading: false,
-  active: [],
-  stats: null,
-  view: "home",
-  matchId: null,
-  matchMode: "replay", // replay | live
-  liveSse: null,
-  replay: { frames: [], initialFen: "", idx: -1, playing: false, timer: null, speed: 1, mode: "human" },
+  liveSort: "hottest",
+  lbTab: "wins",
+  matchId: 0,
   match: null,
-  player: { addr: null, cursor: null, loading: false },
+  matchMode: "replay",
+  liveSse: null,
+  liveSnapshot: null,
+  boardFlipped: false,
+  refreshInFlight: false,
+  refreshTimer: null,
+  replay: {
+    frames: [],
+    initialFen: "",
+    idx: -1,
+    playing: false,
+    timer: null,
+    speed: 1,
+    mode: "human",
+  },
+  player: {
+    address: "",
+  },
 };
 
-function $(id) { return document.getElementById(id); }
+const PIECE = {
+  P: "\u2659",
+  N: "\u2658",
+  B: "\u2657",
+  R: "\u2656",
+  Q: "\u2655",
+  K: "\u2654",
+  p: "\u265F",
+  n: "\u265E",
+  b: "\u265D",
+  r: "\u265C",
+  q: "\u265B",
+  k: "\u265A",
+};
 
-function loadCfg() {
-  const raw = localStorage.getItem("agent_chess_arena_cfg");
-  if (raw) {
-    try { cfg = { ...cfg, ...JSON.parse(raw) }; } catch {}
-  }
-  $("cfgArenaUrl").value = cfg.arenaUrl;
-  $("cfgEscrow").value = cfg.escrow || "";
-  $("cfgBulletin").value = cfg.bulletin;
-  $("cfgNetworkUrl").value = cfg.networkUrl || DEFAULT_CFG.networkUrl;
+function $(id) {
+  return document.getElementById(id);
 }
 
-function saveCfg() {
-  cfg.arenaUrl = $("cfgArenaUrl").value.trim() || DEFAULT_CFG.arenaUrl;
-  cfg.escrow = $("cfgEscrow").value.trim();
-  cfg.bulletin = $("cfgBulletin").value.trim();
-  cfg.networkUrl = $("cfgNetworkUrl").value.trim() || DEFAULT_CFG.networkUrl;
-  localStorage.setItem("agent_chess_arena_cfg", JSON.stringify(cfg));
-  refreshAll();
+function clamp(v, min, max) {
+  return Math.max(min, Math.min(max, v));
 }
 
-// ============================================================
-// Navigation
-// ============================================================
-function setNavActive(which) {
-  $("navHome").classList.toggle("active", which === "home");
-  $("navMatch").classList.toggle("active", which === "match");
-  $("navPlayer").classList.toggle("active", which === "player");
-}
-
-function navHome() { location.hash = "#home"; }
-function navMatch() { if (state.matchId) location.hash = `#match=${state.matchId}`; }
-function navPlayer() { if (state.player.addr) location.hash = `#player=${encodeURIComponent(state.player.addr)}`; }
-
-function route() {
-  const h = location.hash || "#home";
-  if (h.startsWith("#match=")) {
-    const id = parseInt(h.split("=", 2)[1] || "0", 10);
-    showMatch(id);
-  } else if (h.startsWith("#player=")) {
-    const addr = decodeURIComponent(h.split("=", 2)[1] || "");
-    showPlayer(addr);
-  } else {
-    showHome();
+function toBigIntSafe(v) {
+  try {
+    return BigInt(String(v || "0"));
+  } catch {
+    return 0n;
   }
 }
 
-function showHome() {
-  state.view = "home";
-  setNavActive("home");
-  $("homeView").style.display = "block";
-  $("matchView").classList.remove("active");
-  $("playerView").classList.remove("active");
-  stopLive();
+function shortAddr(addr) {
+  const s = String(addr || "");
+  if (!s) return "-";
+  if (s.length <= 18) return s;
+  return `${s.slice(0, 10)}...${s.slice(-4)}`;
 }
 
-function showMatch(matchId) {
-  if (!matchId) return navHome();
-  state.view = "match";
-  state.matchId = matchId;
-  setNavActive("match");
-  $("homeView").style.display = "none";
-  $("playerView").classList.remove("active");
-  $("matchView").classList.add("active");
-  loadMatch(matchId);
+function escapeHtml(s) {
+  return String(s || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/\"/g, "&quot;")
+    .replace(/'/g, "&#039;");
 }
 
-function showPlayer(addr) {
-  if (!addr) return navHome();
-  state.view = "player";
-  state.player.addr = addr;
-  setNavActive("player");
-  $("homeView").style.display = "none";
-  $("matchView").classList.remove("active");
-  $("playerView").classList.add("active");
-  stopLive();
-  loadPlayer(addr, true);
-}
-
-// ============================================================
-// Fetch helpers
-// ============================================================
-async function fetchJson(url, opts = {}) {
-  const resp = await fetch(url, opts);
-  if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-  return await resp.json();
-}
-
-function arenaUrl(path) {
-  const base = (cfg.arenaUrl || DEFAULT_CFG.arenaUrl).replace(/\/+$/, "");
-  return base + path;
-}
-
-function shortAddr(a) {
-  if (!a) return "-";
-  const s = String(a);
-  if (s.length > 18) return s.slice(0, 10) + "..." + s.slice(-4);
-  return s;
+function escapeJs(s) {
+  return String(s || "").replace(/\\/g, "\\\\").replace(/'/g, "\\'");
 }
 
 function attoToClaw(attoStr) {
@@ -683,7 +1375,7 @@ function attoToClaw(attoStr) {
     const whole = x / denom;
     const frac = x % denom;
     if (frac === 0n) return sign + whole.toString();
-    let fracStr = frac.toString().padStart(18, "0").replace(/0+$/, "");
+    const fracStr = frac.toString().padStart(18, "0").replace(/0+$/, "");
     return `${sign}${whole.toString()}.${fracStr}`;
   } catch {
     return String(attoStr || "0");
@@ -695,94 +1387,517 @@ function msToClock(ms) {
   const s = Math.floor(x / 1000);
   const m = Math.floor(s / 60);
   const r = s % 60;
-  return `${String(m).padStart(2,"0")}:${String(r).padStart(2,"0")}`;
+  return `${String(m).padStart(2, "0")}:${String(r).padStart(2, "0")}`;
 }
 
-// ============================================================
-// Home: stats + active + history + leaderboards
-// ============================================================
-async function refreshAll() {
-  $("sysStatus").textContent = "syncing...";
-  try {
-    const [stats, active, hist] = await Promise.all([
-      fetchJson(arenaUrl("/stats")),
-      fetchJson(arenaUrl("/matches/active")),
-      fetchJson(arenaUrl("/history?limit=50")),
-    ]);
-    state.stats = stats;
-    state.active = active.items || [];
-    state.history = (hist.items || []);
-    state.historyCursor = hist.next_cursor || null;
-    renderSystem();
-    renderActive();
-    renderHistory(true);
-    renderLeaderboards();
-    $("sysStatus").textContent = "online";
-  } catch (e) {
-    $("sysStatus").textContent = "offline";
-    $("activeList").innerHTML = `<div class="bad">arena unreachable</div>`;
-    $("historyList").innerHTML = `<div class="bad">arena unreachable</div>`;
-    $("lbList").innerHTML = `<div class="bad">arena unreachable</div>`;
+function formatWhen(ms) {
+  const t = Number(ms || 0);
+  if (!t) return "Unknown";
+  return new Date(t).toLocaleString();
+}
+
+function arenaUrl(path) {
+  const base = (cfg.arenaUrl || DEFAULT_CFG.arenaUrl).replace(/\/+$/, "");
+  return base + path;
+}
+
+async function fetchJson(url, opts = {}) {
+  const resp = await fetch(url, opts);
+  if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+  return await resp.json();
+}
+
+function parseFenRows(fen) {
+  const part = String(fen || "").split(" ")[0] || "";
+  const ranks = part.split("/");
+  const out = [];
+  for (const rank of ranks) {
+    const row = [];
+    for (const ch of rank) {
+      if (/[1-8]/.test(ch)) {
+        const n = Number(ch);
+        for (let i = 0; i < n; i++) row.push("");
+      } else {
+        row.push(ch);
+      }
+    }
+    while (row.length < 8) row.push("");
+    out.push(row.slice(0, 8));
   }
+  while (out.length < 8) out.push(["", "", "", "", "", "", "", ""]);
+  return out.slice(0, 8);
 }
 
-function renderSystem() {
+function boardHtml(fen, lastMove, flipped = false) {
+  const rows = parseFenRows(fen);
+  let fromSq = "";
+  let toSq = "";
+  if (lastMove && lastMove.length >= 4) {
+    fromSq = lastMove.slice(0, 2);
+    toSq = lastMove.slice(2, 4);
+  }
+  const files = flipped ? ["h", "g", "f", "e", "d", "c", "b", "a"] : ["a", "b", "c", "d", "e", "f", "g", "h"];
+  const ranks = flipped ? [1, 2, 3, 4, 5, 6, 7, 8] : [8, 7, 6, 5, 4, 3, 2, 1];
+  let html = "";
+  for (let rankIdx = 0; rankIdx < 8; rankIdx++) {
+    for (let fileIdx = 0; fileIdx < 8; fileIdx++) {
+      const sqName = `${files[fileIdx]}${ranks[rankIdx]}`;
+      const boardRank = 8 - ranks[rankIdx];
+      const boardFile = files[fileIdx].charCodeAt(0) - 97;
+      const isLight = (boardRank + boardFile) % 2 === 0;
+      const p = rows[boardRank][boardFile] || "";
+      const hl = sqName === fromSq || sqName === toSq;
+      html += `<div class=\"sq ${isLight ? "light" : "dark"}${hl ? " hl" : ""}\">${PIECE[p] || ""}</div>`;
+    }
+  }
+  return html;
+}
+
+function materialEval(fen) {
+  const rows = parseFenRows(fen);
+  const val = { P: 1, N: 3, B: 3, R: 5, Q: 9, K: 0 };
+  let white = 0;
+  let black = 0;
+  for (const row of rows) {
+    for (const p of row) {
+      if (!p) continue;
+      if (p >= "A" && p <= "Z") white += val[p] || 0;
+      else black += val[p.toUpperCase()] || 0;
+    }
+  }
+  const diff = white - black;
+  const pct = clamp(50 + diff * 5, 5, 95);
+  return { diff, pct };
+}
+
+function tensionScore(match) {
+  const whiteMs = Math.max(0, Number(match.white_ms || 0));
+  const blackMs = Math.max(0, Number(match.black_ms || 0));
+  const baseWhite = Math.max(1, Number(match.base_time_s || 1)) * 1000;
+  const baseBlack = Math.max(1, Number(match.black_time_s || match.base_time_s || 1)) * 1000;
+  const totalBase = baseWhite + baseBlack;
+  const totalLeft = whiteMs + blackMs;
+  const burn = clamp(1 - totalLeft / totalBase, 0, 1);
+  const balance = clamp(1 - Math.abs(whiteMs - blackMs) / Math.max(totalLeft, 1), 0, 1);
+  return Math.round((burn * 0.65 + balance * 0.35) * 100);
+}
+
+function resultInfo(result) {
+  const r = String(result || "");
+  if (r === "WhiteWin") return { cls: "win", label: "White Won" };
+  if (r === "BlackWin") return { cls: "loss", label: "Black Won" };
+  if (r === "Draw") return { cls: "draw", label: "Draw" };
+  return { cls: "unknown", label: "Unresolved" };
+}
+
+function outcomeLine(match) {
+  const r = String(match.result || "");
+  const w = shortAddr(match.white);
+  const b = shortAddr(match.black);
+  if (r === "WhiteWin") return `${w} took the point over ${b}.`;
+  if (r === "BlackWin") return `${b} struck back and won against ${w}.`;
+  if (r === "Draw") return `${w} and ${b} held the line.`;
+  return `${w} vs ${b}`;
+}
+
+function storyText() {
+  const active = state.active || [];
+  const history = state.history || [];
+
+  if (active.length > 0) {
+    const hot = [...active].sort((a, b) => {
+      const as = toBigIntSafe(a.stake_atto);
+      const bs = toBigIntSafe(b.stake_atto);
+      if (as === bs) return Number(b.match_id || 0) - Number(a.match_id || 0);
+      return bs > as ? 1 : -1;
+    })[0];
+    const t = tensionScore(hot);
+    return {
+      title: `${shortAddr(hot.white)} vs ${shortAddr(hot.black)} is the hottest table right now`,
+      sub: `${attoToClaw(hot.stake_atto)} CLAW on the board, tension ${t}%, clock duel ${msToClock(hot.white_ms)} / ${msToClock(hot.black_ms)}.`,
+      mode: "live focus",
+      tags: [
+        `<span class=\"chip live\">match #${hot.match_id}</span>`,
+        `<span class=\"chip\">chess960 #${hot.chess960_pos}</span>`,
+        `<span class=\"chip\">${attoToClaw(hot.stake_atto)} CLAW</span>`,
+      ],
+    };
+  }
+
+  if (history.length > 0) {
+    const latest = history[0];
+    const res = resultInfo(latest.result);
+    return {
+      title: `Last completed fight: ${res.label}`,
+      sub: `${outcomeLine(latest)} Payout ${attoToClaw(latest.payout_atto || 0)} CLAW at ${formatWhen(latest.end_ms)}.`,
+      mode: "recent outcomes",
+      tags: [
+        `<span class=\"chip\">match #${latest.match_id}</span>`,
+        `<span class=\"chip\">${res.label}</span>`,
+      ],
+    };
+  }
+
+  return {
+    title: "No battles recorded yet",
+    sub: "Once games start, this board becomes the live drama feed.",
+    mode: "waiting",
+    tags: ["<span class=\"chip\">arena idle</span>"],
+  };
+}
+
+function setLiveSort(mode) {
+  state.liveSort = mode;
+  $("sortHot").classList.toggle("active", mode === "hottest");
+  $("sortStake").classList.toggle("active", mode === "stake");
+  $("sortClock").classList.toggle("active", mode === "time");
+  $("sortMoves").classList.toggle("active", mode === "moves");
+  const labels = {
+    hottest: "sorted by hottest",
+    stake: "sorted by stake",
+    time: "sorted by time scramble",
+    moves: "sorted by move count",
+  };
+  $("liveSortLabel").textContent = labels[mode] || labels.hottest;
+  renderLive();
+}
+
+function sortLiveItems(items) {
+  const list = [...(items || [])];
+  return list.sort((a, b) => {
+    if (state.liveSort === "stake") {
+      const as = toBigIntSafe(a.stake_atto);
+      const bs = toBigIntSafe(b.stake_atto);
+      if (as !== bs) return bs > as ? 1 : -1;
+    } else if (state.liveSort === "time") {
+      const amin = Math.min(Number(a.white_ms || 0), Number(a.black_ms || 0));
+      const bmin = Math.min(Number(b.white_ms || 0), Number(b.black_ms || 0));
+      if (amin !== bmin) return amin - bmin;
+    } else if (state.liveSort === "moves") {
+      const am = Array.isArray(a.moves) ? a.moves.length : 0;
+      const bm = Array.isArray(b.moves) ? b.moves.length : 0;
+      if (am !== bm) return bm - am;
+    } else {
+      const at = tensionScore(a);
+      const bt = tensionScore(b);
+      if (at !== bt) return bt - at;
+    }
+    return Number(b.match_id || 0) - Number(a.match_id || 0);
+  });
+}
+
+function winnerAddress(match) {
+  const result = String(match?.result || "");
+  if (result === "WhiteWin") return match.white || "";
+  if (result === "BlackWin") return match.black || "";
+  return "";
+}
+
+function outcomeForPlayer(match, player) {
+  const win = winnerAddress(match);
+  if (!win) return "D";
+  return win === player ? "W" : "L";
+}
+
+function computeRivalries(history) {
+  const map = new Map();
+  for (const m of history || []) {
+    const players = [String(m.white || ""), String(m.black || "")].sort();
+    if (!players[0] || !players[1]) continue;
+    const key = players.join("|");
+    if (!map.has(key)) {
+      map.set(key, {
+        a: players[0],
+        b: players[1],
+        games: 0,
+        draws: 0,
+        aWins: 0,
+        bWins: 0,
+        lastMatchId: 0,
+        lastEndMs: 0,
+      });
+    }
+    const row = map.get(key);
+    row.games += 1;
+    row.lastMatchId = Math.max(row.lastMatchId, Number(m.match_id || 0));
+    row.lastEndMs = Math.max(row.lastEndMs, Number(m.end_ms || 0));
+    const w = winnerAddress(m);
+    if (!w) {
+      row.draws += 1;
+    } else if (w === row.a) {
+      row.aWins += 1;
+    } else if (w === row.b) {
+      row.bWins += 1;
+    }
+  }
+  return [...map.values()].sort((x, y) => {
+    if (x.games !== y.games) return y.games - x.games;
+    const xd = x.aWins + x.bWins;
+    const yd = y.aWins + y.bWins;
+    if (xd !== yd) return yd - xd;
+    return y.lastEndMs - x.lastEndMs;
+  });
+}
+
+function computeMomentum(history) {
+  const map = new Map();
+  for (const m of history || []) {
+    const players = [String(m.white || ""), String(m.black || "")];
+    for (const p of players) {
+      if (!p) continue;
+      if (!map.has(p)) {
+        map.set(p, {
+          address: p,
+          games: 0,
+          wins: 0,
+          losses: 0,
+          draws: 0,
+          recent: [],
+        });
+      }
+      const row = map.get(p);
+      row.games += 1;
+      const o = outcomeForPlayer(m, p);
+      if (o === "W") row.wins += 1;
+      else if (o === "L") row.losses += 1;
+      else row.draws += 1;
+      if (row.recent.length < 6) row.recent.push(o);
+    }
+  }
+  return [...map.values()]
+    .map((r) => {
+      const score = r.recent.reduce((acc, x) => acc + (x === "W" ? 3 : x === "D" ? 1 : 0), 0);
+      let streak = 0;
+      let streakType = "";
+      for (const x of r.recent) {
+        if (!streakType) {
+          streakType = x;
+          streak = 1;
+          continue;
+        }
+        if (x === streakType) streak += 1;
+        else break;
+      }
+      return { ...r, score, streak, streakType };
+    })
+    .sort((a, b) => {
+      if (a.score !== b.score) return b.score - a.score;
+      if (a.wins !== b.wins) return b.wins - a.wins;
+      return b.games - a.games;
+    });
+}
+
+function moveEventLabel(move) {
+  const san = String(move?.san || move?.uci || "");
+  if (!san) return "opening";
+  if (san.includes("#")) return "checkmate threat";
+  if (san.includes("+")) return "check delivered";
+  if (san.includes("x")) return "capture";
+  if (san.includes("O-O")) return "castling";
+  if (san.includes("=")) return "promotion";
+  return "quiet move";
+}
+
+function buildCriticalMoments(frames) {
+  const out = [];
+  const list = frames || [];
+  for (let i = 0; i < list.length; i++) {
+    const mv = list[i];
+    const san = String(mv?.san || "");
+    if (!san) continue;
+    if (san.includes("#") || san.includes("+") || san.includes("x") || san.includes("=")) {
+      out.push({ idx: i, label: moveEventLabel(mv), san: san, ply: i + 1 });
+    }
+  }
+  return out.slice(-8).reverse();
+}
+
+function loadCfg() {
+  const raw = localStorage.getItem("agent_chess_arena_cfg");
+  if (raw) {
+    try {
+      cfg = { ...cfg, ...JSON.parse(raw) };
+    } catch {}
+  }
+  $("cfgArenaUrl").value = cfg.arenaUrl;
+  $("cfgEscrow").value = cfg.escrow;
+  $("cfgBulletin").value = cfg.bulletin;
+  $("cfgNetworkUrl").value = cfg.networkUrl;
+  $("pulseEscrow").textContent = cfg.escrow ? `escrow ${shortAddr(cfg.escrow)}` : "escrow not set";
+}
+
+function saveCfg() {
+  cfg.arenaUrl = $("cfgArenaUrl").value.trim() || DEFAULT_CFG.arenaUrl;
+  cfg.escrow = $("cfgEscrow").value.trim();
+  cfg.bulletin = $("cfgBulletin").value.trim();
+  cfg.networkUrl = $("cfgNetworkUrl").value.trim() || DEFAULT_CFG.networkUrl;
+  localStorage.setItem("agent_chess_arena_cfg", JSON.stringify(cfg));
+  $("pulseEscrow").textContent = cfg.escrow ? `escrow ${shortAddr(cfg.escrow)}` : "escrow not set";
+  toggleSettings(false);
+  refreshAll();
+}
+
+function toggleSettings(force) {
+  const el = $("settingsPanel");
+  const willShow = typeof force === "boolean" ? force : !el.classList.contains("show");
+  el.classList.toggle("show", willShow);
+}
+
+function setLbTab(tab) {
+  state.lbTab = tab;
+  $("lbWins").classList.toggle("active", tab === "wins");
+  $("lbGames").classList.toggle("active", tab === "games");
+  $("lbNet").classList.toggle("active", tab === "profit_net");
+  $("lbGross").classList.toggle("active", tab === "payout_gross");
+  const hintMap = {
+    wins: "wins",
+    games: "games",
+    profit_net: "net claw",
+    payout_gross: "gross claw",
+  };
+  $("lbHint").textContent = hintMap[tab] || "wins";
+  renderLeaderboard();
+}
+
+function renderPulse() {
   const t = state.stats?.totals || {};
-  $("sysMatches").textContent = String(t.matches ?? "-");
-  $("sysActive").textContent = String(t.active ?? "-");
-  $("sysVolume").textContent = attoToClaw(t.total_volume_atto_approx || "0") + " CLAW";
-  $("sysFees").textContent = attoToClaw(t.total_fees_atto_approx || "0") + " CLAW";
+  $("pulseActive").textContent = String(t.active ?? 0);
+  $("pulseMatches").textContent = String(t.matches ?? 0);
+  $("pulseVolume").textContent = `${attoToClaw(t.total_volume_atto_approx || "0")} CLAW`;
+  $("pulseFees").textContent = `${attoToClaw(t.total_fees_atto_approx || "0")} CLAW`;
+  $("liveChip").textContent = `${state.active.length} live battles`;
+  $("liveChip").classList.toggle("live", state.active.length > 0);
+  $("historyCount").textContent = `${state.history.length} tracked`;
+  $("pulseClock").textContent = `updated ${new Date().toLocaleTimeString()}`;
 }
 
-function renderActive() {
-  const items = state.active || [];
-  if (!items.length) {
-    $("activeList").innerHTML = `<div class="muted">NO_ACTIVE_MATCHES</div>`;
-    return;
-  }
-  $("activeList").innerHTML = items.map((m) => {
-    const who = `${shortAddr(m.white)} vs ${shortAddr(m.black)}`;
-    const stake = attoToClaw(m.stake_atto) + " CLAW";
-    const clocks = `${msToClock(m.white_ms)} / ${msToClock(m.black_ms)}`;
-    return `
-      <div class="list-item" onclick="openMatch(${m.match_id})">
-        <div><span class="tag red">LIVE</span> <span class="mono">#${m.match_id}</span> <span class="muted">${escapeHtml(who)}</span></div>
-        <div class="muted" style="margin-top:6px;">stake ${escapeHtml(stake)} · clocks ${escapeHtml(clocks)} · pos ${m.chess960_pos}</div>
-      </div>
-    `;
-  }).join("");
+function renderStory() {
+  const s = storyText();
+  $("storyTitle").textContent = s.title;
+  $("storySub").textContent = s.sub;
+  $("storyMode").textContent = s.mode;
+  $("storyTags").innerHTML = s.tags.join("");
 }
 
-function renderHistory(reset) {
-  const items = state.history || [];
+function renderSubstories() {
+  const history = state.history || [];
+  const rivalries = computeRivalries(history).slice(0, 8);
+  const momentum = computeMomentum(history).slice(0, 8);
+
+  if (!rivalries.length) {
+    $("rivalryList").innerHTML = `<div class=\"empty\">Need completed games to build rivalries.</div>`;
+  } else {
+    $("rivalryList").innerHTML = rivalries
+      .map((r) => {
+        const title = `${shortAddr(r.a)} vs ${shortAddr(r.b)}`;
+        const rec = `${r.aWins}-${r.bWins}-${r.draws}`;
+        return `
+          <div class=\"substory-item\" onclick=\"openPlayer('${escapeJs(r.a)}')\">
+            <div class=\"title\">${escapeHtml(title)}</div>
+            <div class=\"meta\">games ${r.games} · record ${rec} · last #${r.lastMatchId}</div>
+          </div>
+        `;
+      })
+      .join("");
+  }
+
+  if (!momentum.length) {
+    $("momentumList").innerHTML = `<div class=\"empty\">Need completed games to measure momentum.</div>`;
+  } else {
+    $("momentumList").innerHTML = momentum
+      .map((m) => {
+        const form = m.recent.join("");
+        const streak = m.streak > 1 ? `${m.streakType}${m.streak}` : m.streakType || "-";
+        return `
+          <div class=\"substory-item\" onclick=\"openPlayer('${escapeJs(m.address)}')\">
+            <div class=\"title\">${escapeHtml(shortAddr(m.address))}</div>
+            <div class=\"meta\">form ${form} · streak ${streak} · score ${m.score}</div>
+          </div>
+        `;
+      })
+      .join("");
+  }
+}
+
+function renderLive() {
+  const items = sortLiveItems(state.active || []);
   if (!items.length) {
-    $("historyList").innerHTML = `<div class="muted">NO_GAMES_YET</div>`;
-    $("loadMoreBtn").disabled = true;
+    $("liveGrid").innerHTML = `<div class=\"empty\">No active matches. Completed battles are listed below.</div>`;
     return;
   }
-  $("loadMoreBtn").disabled = !state.historyCursor;
-  if (reset) {
-    $("historyList").innerHTML = `
-      <div id="historyItems">${items.map(renderHistoryItem).join("")}</div>
-      <div id="historySentinel" style="height: 1px;"></div>
-    `;
-    installHistoryObserver();
-  }
+
+  $("liveGrid").innerHTML = items
+    .map((m, idx) => {
+      const moves = Array.isArray(m.moves) ? m.moves : [];
+      const lastMove = moves.length ? moves[moves.length - 1].uci || "" : "";
+      const lastSan = moves.length ? moves[moves.length - 1].san || moves[moves.length - 1].uci || "-" : "-";
+      const evalData = materialEval(m.fen || m.initial_fen || "");
+      const tension = tensionScore(m);
+      const pressure = tension >= 80 ? "critical" : tension >= 55 ? "high" : tension >= 35 ? "rising" : "stable";
+      const evalLabel = evalData.diff === 0 ? "Material even" : evalData.diff > 0 ? `White +${evalData.diff}` : `Black +${Math.abs(evalData.diff)}`;
+      return `
+        <article class=\"battle-card\" style=\"animation-delay:${idx * 50}ms\" onclick=\"openMatch(${m.match_id})\">
+          <div class=\"battle-top\">
+            <span class=\"chip live\">live</span>
+            <span class=\"battle-match\">match #${m.match_id}</span>
+          </div>
+          <div class=\"battle-players\">
+            <div class=\"battle-player\"><span class=\"name\">${escapeHtml(shortAddr(m.white))}</span><span class=\"clock\">${msToClock(m.white_ms)}</span></div>
+            <div class=\"battle-player\"><span class=\"name\">${escapeHtml(shortAddr(m.black))}</span><span class=\"clock\">${msToClock(m.black_ms)}</span></div>
+          </div>
+          <div class=\"battle-board-wrap\">
+            <div class=\"board board-sm\"><div class=\"board-grid\">${boardHtml(m.fen || m.initial_fen || "", lastMove)}</div></div>
+            <div class=\"battle-metrics\">
+              <div>
+                <div class=\"eval-label\"><span>Position</span><span>${escapeHtml(evalLabel)}</span></div>
+                <div class=\"eval-bar\"><div class=\"eval-fill\" style=\"width:${evalData.pct}%\"></div></div>
+              </div>
+              <div class=\"tension\">
+                <div class=\"tension-title\"><span>Tension</span><span>${tension}%</span></div>
+                <div class=\"tension-bar\"><div class=\"tension-fill\" style=\"width:${tension}%\"></div></div>
+              </div>
+            </div>
+          </div>
+          <div class=\"battle-bottom\">
+            <span>${attoToClaw(m.stake_atto)} CLAW · ${moves.length} moves</span>
+            <span>${escapeHtml(pressure)} · ${escapeHtml(lastSan)} · #${m.chess960_pos}</span>
+          </div>
+        </article>
+      `;
+    })
+    .join("");
 }
 
 function renderHistoryItem(m) {
-  const res = m.result || "Unknown";
-  const tone = res === "WhiteWin" || res === "BlackWin" ? "green" : (res === "Draw" ? "amber" : "red");
-  const who = `${shortAddr(m.white)} vs ${shortAddr(m.black)}`;
-  const stake = attoToClaw(m.stake_atto) + " CLAW";
-  const payout = attoToClaw(m.payout_atto || "0") + " CLAW";
-  const tag = `<span class="tag ${tone}">${escapeHtml(res)}</span>`;
+  const info = resultInfo(m.result);
   return `
-    <div class="list-item" onclick="openMatch(${m.match_id})">
-      <div>${tag} <span class="mono">#${m.match_id}</span> <span class="muted">${escapeHtml(who)}</span></div>
-      <div class="muted" style="margin-top:6px;">stake ${escapeHtml(stake)} · payout ${escapeHtml(payout)} · pos ${m.chess960_pos}</div>
-    </div>
+    <article class=\"results-item\" onclick=\"openMatch(${m.match_id})\">
+      <div class=\"result-top\">
+        <span class=\"result-tag ${info.cls}\">${escapeHtml(info.label)}</span>
+        <span class=\"battle-match\">match #${m.match_id}</span>
+      </div>
+      <h3 class=\"result-title\">${escapeHtml(outcomeLine(m))}</h3>
+      <p class=\"result-sub\">${escapeHtml(shortAddr(m.white))} vs ${escapeHtml(shortAddr(m.black))} · ended ${escapeHtml(formatWhen(m.end_ms))}</p>
+      <div class=\"result-stats\">
+        <div class=\"result-stat\"><span class=\"k\">Stake</span><span class=\"v\">${escapeHtml(attoToClaw(m.stake_atto))} CLAW</span></div>
+        <div class=\"result-stat\"><span class=\"k\">Payout</span><span class=\"v\">${escapeHtml(attoToClaw(m.payout_atto || 0))} CLAW</span></div>
+        <div class=\"result-stat\"><span class=\"k\">Chess960</span><span class=\"v\">#${escapeHtml(String(m.chess960_pos || 0))}</span></div>
+      </div>
+    </article>
   `;
+}
+
+function renderHistory(reset) {
+  const list = state.history || [];
+  if (!list.length) {
+    $("historyList").innerHTML = `<div class=\"empty\">No completed games yet.</div>`;
+    $("loadMoreBtn").disabled = true;
+    return;
+  }
+  if (reset) {
+    $("historyList").innerHTML = list.map(renderHistoryItem).join("");
+  }
+  $("loadMoreBtn").disabled = !state.historyCursor;
 }
 
 async function loadMoreHistory() {
@@ -793,266 +1908,306 @@ async function loadMoreHistory() {
     const items = resp.items || [];
     state.history.push(...items);
     state.historyCursor = resp.next_cursor || null;
-    const box = $("historyItems");
-    if (box && items.length) box.insertAdjacentHTML("beforeend", items.map(renderHistoryItem).join(""));
+    const html = items.map(renderHistoryItem).join("");
+    if (html) $("historyList").insertAdjacentHTML("beforeend", html);
     $("loadMoreBtn").disabled = !state.historyCursor;
+    renderSubstories();
   } catch {}
   state.historyLoading = false;
 }
 
-function installHistoryObserver() {
-  try {
-    if (historyObserver) historyObserver.disconnect();
-    const root = $("historyList");
-    const sentinel = $("historySentinel");
-    if (!root || !sentinel) return;
-    historyObserver = new IntersectionObserver((entries) => {
-      for (const e of entries) {
-        if (e.isIntersecting) loadMoreHistory();
-      }
-    }, { root, rootMargin: "600px 0px", threshold: 0.01 });
-    historyObserver.observe(sentinel);
-  } catch {}
-}
-
-function setLbTab(tab) {
-  state.lbTab = tab;
-  $("lbTabWins").classList.toggle("secondary", tab !== "wins");
-  $("lbTabGames").classList.toggle("secondary", tab !== "games");
-  $("lbTabClaw").classList.toggle("secondary", tab !== "claw");
-  $("lbMode").style.display = tab === "claw" ? "inline-block" : "none";
-  renderLeaderboards();
-}
-
-function toggleClawMode() {
-  state.clawMode = state.clawMode === "net" ? "gross" : "net";
-  $("lbMode").textContent = state.clawMode === "net" ? "mode: NET" : "mode: GROSS";
-  renderLeaderboards();
-}
-
-function renderLeaderboards() {
+function renderLeaderboard() {
   const lbs = state.stats?.leaderboards || {};
   let items = [];
   if (state.lbTab === "wins") items = lbs.wins || [];
   if (state.lbTab === "games") items = lbs.games || [];
-  if (state.lbTab === "claw") items = state.clawMode === "net" ? (lbs.profit_net || []) : (lbs.payout_gross || []);
+  if (state.lbTab === "profit_net") items = lbs.profit_net || [];
+  if (state.lbTab === "payout_gross") items = lbs.payout_gross || [];
 
   if (!items.length) {
-    $("lbList").innerHTML = `<div class="muted">NO_STATS_YET</div>`;
+    $("leaderboardList").innerHTML = `<div class=\"empty\">No leaderboard data yet.</div>`;
     return;
   }
 
-  $("lbList").innerHTML = items.slice(0, 25).map((it, i) => {
-    const addr = it.address || "";
-    let val = "";
-    if (state.lbTab === "wins") val = `${it.wins_paid} wins`;
-    else if (state.lbTab === "games") val = `${it.games_played} games`;
-    else if (state.lbTab === "claw") {
-      const atto = state.clawMode === "net" ? it.claw_profit_net_atto : it.claw_payout_gross_atto;
-      val = `${attoToClaw(atto)} CLAW`;
-    }
-    return `
-      <div class="row">
-        <div class="k">${i+1}.</div>
-        <div class="mono" style="cursor:pointer; color: var(--aqua);" onclick="openPlayer('${escapeJs(addr)}')">${escapeHtml(shortAddr(addr))}</div>
-        <div class="v">${escapeHtml(val)}</div>
-      </div>
-    `;
-  }).join("");
+  $("leaderboardList").innerHTML = items
+    .slice(0, 25)
+    .map((it, idx) => {
+      let val = "";
+      if (state.lbTab === "wins") val = `${it.wins_paid} wins`;
+      else if (state.lbTab === "games") val = `${it.games_played} games`;
+      else if (state.lbTab === "profit_net") val = `${attoToClaw(it.claw_profit_net_atto)} CLAW`;
+      else val = `${attoToClaw(it.claw_payout_gross_atto)} CLAW`;
+      return `
+        <div class=\"leader-item\">
+          <span>${idx + 1}.</span>
+          <span class=\"addr\" onclick=\"openPlayer('${escapeJs(it.address || "")}')\">${escapeHtml(shortAddr(it.address || ""))}</span>
+          <span class=\"val\">${escapeHtml(val)}</span>
+        </div>
+      `;
+    })
+    .join("");
 }
 
-// ============================================================
-// Match: live + replay
-// ============================================================
-function openMatch(id) { location.hash = `#match=${id}`; }
-function openPlayer(addr) { location.hash = `#player=${encodeURIComponent(addr)}`; }
+function scheduleRefreshLoop() {
+  if (state.refreshTimer) clearTimeout(state.refreshTimer);
+  if (state.view !== "home") return;
+  const intervalMs = (state.active || []).length > 0 ? 3200 : 9000;
+  state.refreshTimer = setTimeout(() => {
+    if (state.view === "home") refreshAll();
+  }, intervalMs);
+}
+
+async function refreshAll() {
+  if (state.refreshInFlight) return;
+  state.refreshInFlight = true;
+  $("pulseStatus").textContent = "syncing";
+  try {
+    const [stats, active, history] = await Promise.all([
+      fetchJson(arenaUrl("/stats")),
+      fetchJson(arenaUrl("/matches/active")),
+      fetchJson(arenaUrl("/history?limit=50")),
+    ]);
+
+    state.stats = stats;
+    state.active = active.items || [];
+    state.history = history.items || [];
+    state.historyCursor = history.next_cursor || null;
+
+    renderPulse();
+    renderStory();
+    renderLive();
+    renderSubstories();
+    renderHistory(true);
+    renderLeaderboard();
+
+    $("pulseStatus").textContent = "online";
+    $("pulseStatus").style.color = "#5fe886";
+  } catch {
+    $("pulseStatus").textContent = "offline";
+    $("pulseStatus").style.color = "#ff7373";
+    $("liveGrid").innerHTML = `<div class=\"empty\">Arena API unreachable. Check settings.</div>`;
+    $("historyList").innerHTML = `<div class=\"empty\">Cannot load match history.</div>`;
+    $("leaderboardList").innerHTML = `<div class=\"empty\">Cannot load leaderboard.</div>`;
+    $("rivalryList").innerHTML = `<div class=\"empty\">Cannot load rivalries.</div>`;
+    $("momentumList").innerHTML = `<div class=\"empty\">Cannot load momentum.</div>`;
+    $("storyTitle").textContent = "Arena offline";
+    $("storySub").textContent = "Set a valid Arena API endpoint in settings.";
+    $("storyTags").innerHTML = `<span class=\"chip\">connection error</span>`;
+  } finally {
+    state.refreshInFlight = false;
+    scheduleRefreshLoop();
+  }
+}
+
+function renderMoveList(frames, activeIdx) {
+  if (!frames.length) {
+    $("moveList").innerHTML = `<div class=\"empty\">No moves yet.</div>`;
+    return;
+  }
+  $("moveList").innerHTML = frames
+    .map((f, i) => {
+      const cls = i === activeIdx ? "move-row active" : "move-row";
+      const txt = escapeHtml(f.san || f.uci || "-");
+      const flag = moveEventLabel(f);
+      return `<div class=\"${cls}\" onclick=\"jumpToMove(${i})\"><span>${i + 1}</span><span>${txt} <span style=\"color:var(--muted)\">(${escapeHtml(flag)})</span></span></div>`;
+    })
+    .join("");
+}
+
+function setEvalForFen(fen) {
+  const e = materialEval(fen || "");
+  let text = "Material even";
+  if (e.diff > 0) text = `White +${e.diff}`;
+  else if (e.diff < 0) text = `Black +${Math.abs(e.diff)}`;
+  $("duelEvalLeft").textContent = text;
+  $("duelEvalRight").textContent = `white share ${Math.round(e.pct)}%`;
+  $("duelEvalFill").style.width = `${e.pct}%`;
+}
+
+function renderCriticalMoments(frames) {
+  const moments = buildCriticalMoments(frames || []);
+  if (!moments.length) {
+    $("criticalList").innerHTML = `<div class=\"empty\">No tactical spikes yet.</div>`;
+    return;
+  }
+  $("criticalList").innerHTML = moments
+    .map((m) => `<div class=\"critical-item\" onclick=\"jumpToMove(${m.idx})\">#${m.ply} ${escapeHtml(m.san)} · ${escapeHtml(m.label)}</div>`)
+    .join("");
+}
+
+function renderMatchSignals(match, frames, idx) {
+  const tension = tensionScore(match || {});
+  $("duelTension").textContent = `${tension}%`;
+  $("duelMoveCount").textContent = String((frames || []).length);
+  if (idx >= 0 && idx < (frames || []).length) {
+    $("duelLastEvent").textContent = moveEventLabel(frames[idx]);
+  } else if ((frames || []).length) {
+    $("duelLastEvent").textContent = moveEventLabel(frames[frames.length - 1]);
+  } else {
+    $("duelLastEvent").textContent = "opening";
+  }
+  renderCriticalMoments(frames || []);
+}
+
+function setNarrative(match, fen, frames, idx) {
+  const evalData = materialEval(fen || "");
+  const result = String(match?.result || "");
+  let main = "";
+  let sub = "";
+
+  if (result === "WhiteWin") {
+    main = `${shortAddr(match.white)} converted the advantage and closed the fight.`;
+  } else if (result === "BlackWin") {
+    main = `${shortAddr(match.black)} found the decisive break and won.`;
+  } else if (result === "Draw") {
+    main = "Neither side broke through. The game settled as a draw.";
+  } else {
+    main = `The fight is live. ${match?.turn === "white" ? "White" : "Black"} to move.`;
+  }
+
+  if (idx >= 0 && idx < frames.length) {
+    const move = frames[idx];
+    sub = `Move ${idx + 1}: ${move.san || move.uci || "-"} (${moveEventLabel(move)}). ${evalData.diff === 0 ? "Position balanced." : evalData.diff > 0 ? "White has material pressure." : "Black has material pressure."}`;
+  } else {
+    sub = `${evalData.diff === 0 ? "Material is level." : evalData.diff > 0 ? "White leads in material." : "Black leads in material."}`;
+  }
+
+  $("narrativeMain").textContent = main;
+  $("narrativeSub").textContent = sub;
+}
+
+function renderMatchHeader(match) {
+  $("duelWhite").textContent = shortAddr(match.white);
+  $("duelBlack").textContent = shortAddr(match.black);
+
+  const stake = attoToClaw(match.stake_atto || 0);
+  const payout = attoToClaw(match.payout_atto || 0);
+  const result = match.result || "Active";
+
+  $("duelMeta").innerHTML = [
+    `<span class=\"chip\">match #${match.match_id}</span>`,
+    `<span class=\"chip\">stake ${stake} CLAW</span>`,
+    `<span class=\"chip\">payout ${payout} CLAW</span>`,
+    `<span class=\"chip\">result ${escapeHtml(result)}</span>`,
+    `<span class=\"chip\">chess960 #${match.chess960_pos || 0}</span>`,
+  ].join("");
+}
+
+function openMatch(matchId) {
+  location.hash = `#match=${matchId}`;
+}
+
+function openPlayer(address) {
+  location.hash = `#player=${encodeURIComponent(address)}`;
+}
+
+function backHome() {
+  location.hash = "#home";
+}
+
+function showHome() {
+  state.view = "home";
+  $("homeView").style.display = "block";
+  $("matchStage").classList.remove("show");
+  $("playerStage").classList.remove("show");
+  stopLive();
+  stopReplay();
+  scheduleRefreshLoop();
+}
+
+async function showMatch(matchId) {
+  if (!matchId || Number.isNaN(matchId)) {
+    backHome();
+    return;
+  }
+  state.view = "match";
+  state.matchId = matchId;
+  if (state.refreshTimer) clearTimeout(state.refreshTimer);
+  $("homeView").style.display = "none";
+  $("playerStage").classList.remove("show");
+  $("matchStage").classList.add("show");
+  await loadMatch(matchId);
+}
+
+async function showPlayer(address) {
+  if (!address) {
+    backHome();
+    return;
+  }
+  state.view = "player";
+  state.player.address = address;
+  if (state.refreshTimer) clearTimeout(state.refreshTimer);
+  $("homeView").style.display = "none";
+  $("matchStage").classList.remove("show");
+  $("playerStage").classList.add("show");
+  stopLive();
+  stopReplay();
+  await loadPlayer(address);
+}
+
+function route() {
+  const hash = location.hash || "#home";
+  if (hash.startsWith("#match=")) {
+    const id = parseInt(hash.split("=", 2)[1] || "0", 10);
+    showMatch(id);
+    return;
+  }
+  if (hash.startsWith("#player=")) {
+    const addr = decodeURIComponent(hash.split("=", 2)[1] || "");
+    showPlayer(addr);
+    return;
+  }
+  showHome();
+}
 
 function setMatchMode(mode) {
   state.matchMode = mode;
-  $("btnLive").classList.toggle("secondary", mode !== "live");
-  $("btnReplay").classList.toggle("secondary", mode !== "replay");
+  $("modeLive").classList.toggle("primary", mode === "live");
+  $("modeReplay").classList.toggle("primary", mode === "replay");
+  $("replaySeek").disabled = mode !== "replay";
+  $("replayPlayBtn").disabled = mode !== "replay";
+  updateReplayUi();
   if (!state.matchId) return;
   if (mode === "live") startLive(state.matchId);
-  if (mode === "replay") { stopLive(); loadReplay(state.matchId); }
+  else {
+    stopLive();
+    loadReplay(state.matchId);
+  }
 }
 
-async function loadMatch(id) {
+async function loadMatch(matchId) {
   stopLive();
   stopReplay();
-  $("matchMeta").innerHTML = `<div class="muted">loading match #${id}...</div>`;
-  $("moveList").innerHTML = "";
-  $("chatList").innerHTML = `<div class="muted">no chat</div>`;
+  state.liveSnapshot = null;
+  $("moveList").innerHTML = `<div class=\"empty\">Loading match #${matchId}...</div>`;
+  $("liveStateText").textContent = "Loading match feed...";
   try {
-    const resp = await fetchJson(arenaUrl(`/match/${id}`));
+    const resp = await fetchJson(arenaUrl(`/match/${matchId}`));
     if (!resp.ok) throw new Error(resp.error || "match not found");
     state.match = resp.match;
-    renderMatchMeta(resp.match);
-    renderChat(resp.match);
+    renderMatchHeader(resp.match);
+
+    const initialFen = resp.match?.initial_fen || "";
+    $("mainBoard").innerHTML = boardHtml(initialFen, "", state.boardFlipped);
+    setEvalForFen(initialFen);
+
+    const whiteMs = Number(resp.match.base_time_s || 0) * 1000;
+    const blackMs = Number(resp.match.black_time_s || resp.match.base_time_s || 0) * 1000;
+    $("duelWhiteClock").textContent = msToClock(whiteMs);
+    $("duelBlackClock").textContent = msToClock(blackMs);
+    setNarrative(resp.match, initialFen, [], -1);
+    renderMatchSignals({ ...resp.match, white_ms: whiteMs, black_ms: blackMs }, [], -1);
+
     if (resp.live) {
-      // default to live for active games
       setMatchMode("live");
     } else {
       setMatchMode("replay");
     }
   } catch (e) {
-    $("matchMeta").innerHTML = `<div class="bad">${escapeHtml(String(e))}</div>`;
-  }
-}
-
-function renderMatchMeta(m) {
-  const who = `${shortAddr(m.white)} vs ${shortAddr(m.black)}`;
-  const stake = attoToClaw(m.stake_atto) + " CLAW";
-  const res = m.result || "-";
-  const payout = attoToClaw(m.payout_atto || "0") + " CLAW";
-  const fee = attoToClaw(m.fee_atto || "0") + " CLAW";
-  const pos = m.chess960_pos || 0;
-  $("matchMeta").innerHTML = `
-    <div><b>#${m.match_id}</b> <span class="muted">${escapeHtml(who)}</span></div>
-    <div>stake <b>${escapeHtml(stake)}</b> · pos <b>${pos}</b> · result <b>${escapeHtml(res)}</b></div>
-    <div>payout <b>${escapeHtml(payout)}</b> · fee <b>${escapeHtml(fee)}</b></div>
-  `;
-}
-
-function renderBoardFromFen(fen, lastMoveUci = "") {
-  const grid = $("boardGrid");
-  grid.innerHTML = "";
-  const placement = String(fen || "").split(" ")[0] || "";
-  const ranks = placement.split("/");
-  const pieces = [];
-  for (const r of ranks) {
-    const row = [];
-    for (const ch of r) {
-      if (/[1-8]/.test(ch)) {
-        for (let i = 0; i < parseInt(ch, 10); i++) row.push("");
-      } else {
-        row.push(ch);
-      }
-    }
-    pieces.push(row);
-  }
-  const map = {
-    "P":"\u2659","N":"\u2658","B":"\u2657","R":"\u2656","Q":"\u2655","K":"\u2654",
-    "p":"\u265F","n":"\u265E","b":"\u265D","r":"\u265C","q":"\u265B","k":"\u265A",
-  };
-
-  let hlFrom = "", hlTo = "";
-  if (lastMoveUci && lastMoveUci.length >= 4) {
-    hlFrom = lastMoveUci.slice(0,2);
-    hlTo = lastMoveUci.slice(2,4);
-  }
-
-  // board squares: a8..h8 ... a1..h1
-  const files = ["a","b","c","d","e","f","g","h"];
-  for (let rank = 0; rank < 8; rank++) {
-    for (let file = 0; file < 8; file++) {
-      const sq = files[file] + String(8-rank);
-      const isLight = (rank + file) % 2 === 0;
-      const piece = (pieces[rank] && pieces[rank][file]) ? pieces[rank][file] : "";
-      const el = document.createElement("div");
-      el.className = "sq " + (isLight ? "light" : "dark");
-      if (sq === hlFrom || sq === hlTo) el.classList.add("hl");
-      el.textContent = map[piece] || "";
-      grid.appendChild(el);
-    }
-  }
-}
-
-function renderMoveListFromFrames(frames, activeIdx) {
-  const box = $("moveList");
-  if (!frames.length) {
-    box.innerHTML = `<div class="muted">NO_MOVES</div>`;
-    return;
-  }
-  box.innerHTML = frames.map((f, i) => {
-    const isActive = i === activeIdx;
-    const n = (i+1);
-    const label = `${String(n).padStart(3," ")}. ${f.san || f.uci}`;
-    return `<div class="move-row ${isActive ? "active" : ""}"><div class="n">${n}</div><div class="m mono">${escapeHtml(label)}</div></div>`;
-  }).join("");
-}
-
-function setClocks(whiteMs, blackMs) {
-  $("clockWhiteVal").textContent = msToClock(whiteMs);
-  $("clockBlackVal").textContent = msToClock(blackMs);
-}
-
-function startLive(matchId) {
-  stopLive();
-  stopReplay();
-  $("moveList").innerHTML = `<div class="muted">connecting...</div>`;
-  const url = arenaUrl(`/match/${matchId}/events`);
-  const es = new EventSource(url);
-  state.liveSse = es;
-  let lastFen = "";
-  let lastMove = "";
-
-  es.addEventListener("state", (ev) => {
-    try {
-      const obj = JSON.parse(ev.data);
-      const snap = obj?.data || null;
-      if (snap && snap.fen) {
-        lastFen = snap.fen;
-        const moves = snap.moves || [];
-        lastMove = moves.length ? (moves[moves.length-1].uci || "") : "";
-        renderBoardFromFen(lastFen, lastMove);
-        setClocks(snap.white_ms, snap.black_ms);
-        const liveFrames = moves.map((m) => ({ uci: m.uci, san: m.san }));
-        renderMoveListFromFrames(liveFrames, liveFrames.length - 1);
-      }
-    } catch {}
-  });
-
-  es.addEventListener("final", (ev) => {
-    try {
-      const obj = JSON.parse(ev.data);
-      const snap = obj?.data || null;
-      if (snap && snap.fen) {
-        lastFen = snap.fen;
-        const moves = snap.moves || [];
-        lastMove = moves.length ? (moves[moves.length-1].uci || "") : "";
-        renderBoardFromFen(lastFen, lastMove);
-        setClocks(snap.white_ms, snap.black_ms);
-        const liveFrames = moves.map((m) => ({ uci: m.uci, san: m.san }));
-        renderMoveListFromFrames(liveFrames, liveFrames.length - 1);
-      }
-    } catch {}
-    // Switch to replay mode for watchability, but refresh match meta first (result/payout).
-    setTimeout(async () => {
-      try {
-        const resp = await fetchJson(arenaUrl(`/match/${matchId}`));
-        if (resp.ok) {
-          state.match = resp.match;
-          renderMatchMeta(resp.match);
-        }
-      } catch {}
-      setMatchMode("replay");
-    }, 250);
-  });
-
-  es.onerror = () => {
-    // ignore; user can switch to replay.
-  };
-}
-
-function stopLive() {
-  if (state.liveSse) {
-    try { state.liveSse.close(); } catch {}
-    state.liveSse = null;
-  }
-}
-
-async function loadReplay(matchId) {
-  stopReplay();
-  try {
-    const resp = await fetchJson(arenaUrl(`/match/${matchId}/replay`));
-    if (!resp.ok) throw new Error(resp.error || "replay not found");
-    state.replay.frames = resp.frames || [];
-    state.replay.initialFen = resp.initial_fen || "";
-    state.replay.idx = -1;
-    updateReplayUi();
-    applyReplayIndex(-1);
-  } catch (e) {
-    $("moveList").innerHTML = `<div class="bad">${escapeHtml(String(e))}</div>`;
+    const msg = escapeHtml(String(e));
+    $("moveList").innerHTML = `<div class=\"empty\">${msg}</div>`;
+    $("criticalList").innerHTML = `<div class=\"empty\">No data.</div>`;
+    $("liveStateText").textContent = "Match unavailable";
   }
 }
 
@@ -1060,34 +2215,100 @@ function applyReplayIndex(idx) {
   const frames = state.replay.frames || [];
   state.replay.idx = idx;
 
-  let fen = state.replay.initialFen || "";
-  let whiteMs = 0, blackMs = 0;
+  let fen = state.replay.initialFen || state.match?.initial_fen || "";
+  let whiteMs = Number(state.match?.base_time_s || 0) * 1000;
+  let blackMs = Number(state.match?.black_time_s || state.match?.base_time_s || 0) * 1000;
   let lastMove = "";
+
   if (idx >= 0 && idx < frames.length) {
     const f = frames[idx];
     fen = f.fen_after || fen;
-    whiteMs = f.white_ms;
-    blackMs = f.black_ms;
+    whiteMs = Number(f.white_ms || 0);
+    blackMs = Number(f.black_ms || 0);
     lastMove = f.uci || "";
-  } else {
-    // initial clocks not always present; derive from match meta if we have it.
-    const m = state.match || {};
-    whiteMs = (Number(m.base_time_s || 0) * 1000);
-    blackMs = (Number(m.black_time_s || 0) * 1000);
   }
 
-  renderBoardFromFen(fen, lastMove);
-  setClocks(whiteMs, blackMs);
-  renderMoveListFromFrames(frames, idx);
+  $("mainBoard").innerHTML = boardHtml(fen, lastMove, state.boardFlipped);
+  setEvalForFen(fen);
+  $("duelWhiteClock").textContent = msToClock(whiteMs);
+  $("duelBlackClock").textContent = msToClock(blackMs);
+  renderMoveList(frames, idx);
+  setNarrative(state.match, fen, frames, idx);
+  renderMatchSignals({ ...state.match, white_ms: whiteMs, black_ms: blackMs }, frames, idx);
   updateReplayUi();
 }
 
 function updateReplayUi() {
   const frames = state.replay.frames || [];
-  const pos = state.replay.idx + 1; // 1-based for display
-  $("replayPos").textContent = `${Math.max(0,pos)} / ${frames.length}`;
-  $("replayPlayBtn").textContent = state.replay.playing ? "pause" : "play";
-  $("replayMode").textContent = state.replay.mode === "human" ? "mode: HUMAN" : "mode: REALTIME";
+  const shown = Math.max(0, state.replay.idx + 1);
+  $("replayPos").textContent = `${shown} / ${frames.length}`;
+  $("replayPlayBtn").textContent = state.replay.playing ? "Pause" : "Play";
+  $("replaySpeedLabel").textContent = `${state.replay.speed.toFixed(2).replace(/\.00$/, "").replace(/0$/, "")}x`;
+  $("replaySeek").max = String(frames.length);
+  $("replaySeek").value = String(shown);
+  $("replayTimingBtn").textContent = `Timing: ${state.replay.mode === "realtime" ? "Realtime" : "Human"}`;
+  $("flipBoardBtn").textContent = `Board: ${state.boardFlipped ? "Black" : "White"}`;
+}
+
+async function loadReplay(matchId) {
+  stopReplay();
+  $("liveStateText").textContent = "Replay mode";
+  try {
+    const resp = await fetchJson(arenaUrl(`/match/${matchId}/replay`));
+    if (!resp.ok) throw new Error(resp.error || "replay not found");
+
+    state.replay.frames = resp.frames || [];
+    state.replay.initialFen = resp.initial_fen || state.match?.initial_fen || "";
+    state.replay.idx = -1;
+
+    applyReplayIndex(-1);
+  } catch (e) {
+    $("moveList").innerHTML = `<div class=\"empty\">${escapeHtml(String(e))}</div>`;
+  }
+}
+
+function replayStep(delta) {
+  stopReplay();
+  const frames = state.replay.frames || [];
+  if (!frames.length) return;
+  const next = clamp(state.replay.idx + delta, -1, frames.length - 1);
+  applyReplayIndex(next);
+}
+
+function onSeekReplay() {
+  stopReplay();
+  const frames = state.replay.frames || [];
+  if (!frames.length) return;
+  const shown = Number($("replaySeek").value || "0");
+  const idx = clamp(shown - 1, -1, frames.length - 1);
+  applyReplayIndex(idx);
+}
+
+function jumpToMove(idx) {
+  if (state.matchMode === "live") return;
+  stopReplay();
+  const frames = state.replay.frames || [];
+  if (!frames.length) return;
+  const next = clamp(Number(idx || 0), -1, frames.length - 1);
+  applyReplayIndex(next);
+}
+
+function toggleReplayMode() {
+  state.replay.mode = state.replay.mode === "realtime" ? "human" : "realtime";
+  updateReplayUi();
+}
+
+function toggleBoardFlip() {
+  state.boardFlipped = !state.boardFlipped;
+  if (state.matchMode === "live" && state.liveSnapshot) {
+    const snap = state.liveSnapshot;
+    const moves = snap.moves || [];
+    const lastMove = moves.length ? moves[moves.length - 1].uci || "" : "";
+    $("mainBoard").innerHTML = boardHtml(snap.fen || snap.initial_fen || "", lastMove, state.boardFlipped);
+    updateReplayUi();
+    return;
+  }
+  applyReplayIndex(state.replay.idx);
 }
 
 function stopReplay() {
@@ -1100,28 +2321,14 @@ function stopReplay() {
 }
 
 function replayToggle() {
+  const frames = state.replay.frames || [];
+  if (!frames.length) return;
   if (state.replay.playing) {
     stopReplay();
     return;
   }
   state.replay.playing = true;
   tickReplay();
-}
-
-function replayStep(delta) {
-  stopReplay();
-  const frames = state.replay.frames || [];
-  if (!frames.length) return;
-  const next = Math.max(-1, Math.min(frames.length-1, state.replay.idx + delta));
-  applyReplayIndex(next);
-}
-
-function onSpeedChange() {
-  state.replay.speed = Number($("replaySpeed").value || "1");
-}
-
-function toggleReplayMode() {
-  state.replay.mode = state.replay.mode === "human" ? "realtime" : "human";
   updateReplayUi();
 }
 
@@ -1135,205 +2342,156 @@ function tickReplay() {
     return;
   }
 
+  let delay = 550;
   const curIdx = state.replay.idx;
-  const nextFrame = frames[next];
-  const delayHuman = 550; // ms per ply baseline
-
-  let delay = delayHuman;
   if (state.replay.mode === "realtime") {
-    const curT = curIdx >= 0 ? frames[curIdx].t_ms_since_start : 0;
-    const nextT = nextFrame.t_ms_since_start || 0;
-    delay = Math.max(40, nextT - curT);
+    const curT = curIdx >= 0 ? Number(frames[curIdx].t_ms_since_start || 0) : 0;
+    const nextT = Number(frames[next].t_ms_since_start || 0);
+    delay = Math.max(50, nextT - curT);
   }
-  delay = Math.max(40, Math.floor(delay / (state.replay.speed || 1)));
 
+  delay = Math.max(45, Math.floor(delay / Math.max(0.25, state.replay.speed || 1)));
   applyReplayIndex(next);
   state.replay.timer = setTimeout(tickReplay, delay);
+}
+
+function onSpeedChange() {
+  state.replay.speed = Number($("replaySpeed").value || "1");
   updateReplayUi();
 }
 
-// ============================================================
-// Player view
-// ============================================================
-async function loadPlayer(addr, reset) {
-  $("playerMeta").innerHTML = `<div class="muted">loading ${escapeHtml(shortAddr(addr))}...</div>`;
-  $("playerGames").innerHTML = `<div class="muted">loading...</div>`;
+function startLive(matchId) {
+  stopLive();
+  stopReplay();
+  $("liveStateText").textContent = "Connecting live feed...";
+  $("moveList").innerHTML = `<div class=\"empty\">Connecting...</div>`;
+
+  const es = new EventSource(arenaUrl(`/match/${matchId}/events`));
+  state.liveSse = es;
+
+  const applySnapshot = (snap) => {
+    if (!snap) return;
+    state.liveSnapshot = snap;
+    const moves = snap.moves || [];
+    const lastMove = moves.length ? moves[moves.length - 1].uci || "" : "";
+
+    $("mainBoard").innerHTML = boardHtml(snap.fen || snap.initial_fen || "", lastMove, state.boardFlipped);
+    setEvalForFen(snap.fen || snap.initial_fen || "");
+    $("duelWhiteClock").textContent = msToClock(snap.white_ms);
+    $("duelBlackClock").textContent = msToClock(snap.black_ms);
+    renderMoveList(moves, moves.length - 1);
+    setNarrative({ ...state.match, result: snap.result, turn: snap.turn, white: snap.white, black: snap.black }, snap.fen, moves, moves.length - 1);
+    renderMatchSignals(snap, moves, moves.length - 1);
+
+    if (snap.result && snap.result !== "Unknown") {
+      $("liveStateText").textContent = `Final: ${snap.result}`;
+    } else {
+      $("liveStateText").textContent = `Live: ${snap.turn === "white" ? "White" : "Black"} to move`;
+    }
+  };
+
+  es.addEventListener("state", (ev) => {
+    try {
+      const obj = JSON.parse(ev.data);
+      applySnapshot(obj.data || null);
+    } catch {}
+  });
+
+  es.addEventListener("final", async (ev) => {
+    try {
+      const obj = JSON.parse(ev.data);
+      applySnapshot(obj.data || null);
+    } catch {}
+
+    try {
+      const resp = await fetchJson(arenaUrl(`/match/${matchId}`));
+      if (resp.ok) {
+        state.match = resp.match;
+        renderMatchHeader(resp.match);
+      }
+    } catch {}
+
+    setTimeout(() => setMatchMode("replay"), 250);
+  });
+
+  es.onerror = () => {
+    $("liveStateText").textContent = "Live feed interrupted (switch to replay)";
+  };
+}
+
+function stopLive() {
+  if (state.liveSse) {
+    try {
+      state.liveSse.close();
+    } catch {}
+    state.liveSse = null;
+  }
+  state.liveSnapshot = null;
+}
+
+async function loadPlayer(address) {
+  $("playerSummary").innerHTML = `<div>Loading ${escapeHtml(shortAddr(address))}...</div>`;
+  $("playerGames").innerHTML = `<div class=\"empty\">Loading games...</div>`;
   try {
-    const resp = await fetchJson(arenaUrl(`/player/${encodeURIComponent(addr)}?limit=50`));
-    if (!resp.ok) throw new Error(resp.error || "not found");
+    const resp = await fetchJson(arenaUrl(`/player/${encodeURIComponent(address)}?limit=50`));
+    if (!resp.ok) throw new Error(resp.error || "player not found");
+
     const p = resp.profile;
     if (!p) {
-      $("playerMeta").innerHTML = `<div><b>${escapeHtml(addr)}</b></div><div class="muted">no stats yet</div>`;
+      $("playerSummary").innerHTML = `<div><strong>${escapeHtml(address)}</strong></div><div>No stats yet.</div>`;
     } else {
-      $("playerMeta").innerHTML = `
-        <div><b>${escapeHtml(addr)}</b></div>
-        <div>wins <b>${p.wins_paid}</b> · games <b>${p.games_played}</b> · draws <b>${p.draw_outcomes}</b></div>
-        <div>net <b>${escapeHtml(attoToClaw(p.claw_profit_net_atto))} CLAW</b> · gross <b>${escapeHtml(attoToClaw(p.claw_payout_gross_atto))} CLAW</b></div>
+      $("playerSummary").innerHTML = `
+        <div><strong>${escapeHtml(p.address)}</strong></div>
+        <div>Wins ${p.wins_paid} · Losses ${p.losses_paid} · Draws ${p.draw_outcomes} · Games ${p.games_played}</div>
+        <div>Net ${escapeHtml(attoToClaw(p.claw_profit_net_atto))} CLAW · Gross ${escapeHtml(attoToClaw(p.claw_payout_gross_atto))} CLAW</div>
       `;
     }
+
     const games = resp.games || [];
+    $("playerCount").textContent = `${games.length} games`;
     if (!games.length) {
-      $("playerGames").innerHTML = `<div class="muted">NO_GAMES</div>`;
-    } else {
-      $("playerGames").innerHTML = games.map(renderHistoryItem).join("");
+      $("playerGames").innerHTML = `<div class=\"empty\">No completed games.</div>`;
+      return;
     }
+    $("playerGames").innerHTML = games.map(renderHistoryItem).join("");
   } catch (e) {
-    $("playerMeta").innerHTML = `<div class="bad">${escapeHtml(String(e))}</div>`;
-    $("playerGames").innerHTML = "";
+    $("playerSummary").innerHTML = `<div>${escapeHtml(String(e))}</div>`;
+    $("playerGames").innerHTML = `<div class=\"empty\">Unable to load player data.</div>`;
   }
 }
 
-// ============================================================
-// Bulletin Board chat viewer (read-only)
-// ============================================================
-async function vmQuery(scAddress, funcName, args = []) {
-  const url = `${cfg.networkUrl}/vm-values/query`;
-  const resp = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ scAddress, funcName, args }),
-  });
-  const json = await resp.json();
-  const data = json?.data?.data || json;
-  if (data.returnCode && data.returnCode !== "ok") throw new Error(data.returnMessage || data.returnCode);
-  return data.returnData || [];
+function bootstrapTabs() {
+  setLbTab("wins");
+  setLiveSort("hottest");
+  $("modeLive").classList.remove("primary");
+  $("modeReplay").classList.add("primary");
+  updateReplayUi();
 }
 
-function b64ToBytes(b64) {
-  const bin = atob(b64);
-  const out = new Uint8Array(bin.length);
-  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
-  return out;
-}
-
-function decodeU64BE(bytes, off) {
-  let v = 0n;
-  for (let i = 0; i < 8; i++) v = (v << 8n) | BigInt(bytes[off + i]);
-  return [Number(v), off + 8];
-}
-
-function decodeU32BE(bytes, off) {
-  let v = 0;
-  for (let i = 0; i < 4; i++) v = (v << 8) | bytes[off + i];
-  return [v, off + 4];
-}
-
-function decodeManagedBuffer(bytes, off) {
-  const [ln, off2] = decodeU32BE(bytes, off);
-  const buf = bytes.slice(off2, off2 + ln);
-  return [new TextDecoder().decode(buf), off2 + ln];
-}
-
-function decodeManagedAddress(bytes, off) {
-  const raw = bytes.slice(off, off + 32);
-  // Minimal bech32 encode (same charset as contract frontends).
-  const hrp = "claw";
-  const data = convertBits([...raw], 8, 5, true);
-  const checksum = bech32CreateChecksum(hrp, data);
-  const combined = data.concat(checksum);
-  const addr = hrp + "1" + combined.map((v) => BECH32_CHARSET[v]).join("");
-  return [addr, off + 32];
-}
-
-function decodePost(b64) {
-  const bytes = b64ToBytes(b64);
-  let off = 0;
-  let id; [id, off] = decodeU64BE(bytes, off);
-  let author; [author, off] = decodeManagedAddress(bytes, off);
-  let title; [title, off] = decodeManagedBuffer(bytes, off);
-  let body; [body, off] = decodeManagedBuffer(bytes, off);
-  let ts; [ts, off] = decodeU64BE(bytes, off);
-  let parent; [parent, off] = decodeU64BE(bytes, off);
-  return { id, author, title, body, timestamp: ts, parent_id: parent };
-}
-
-const BECH32_CHARSET = "qpzry9x8gf2tvdw0s3jn54khce6mua7l";
-function bech32Polymod(values) {
-  const GEN = [0x3b6a57b2, 0x26508e6d, 0x1ea119fa, 0x3d4233dd, 0x2a1462b3];
-  let chk = 1;
-  for (const v of values) {
-    const b = chk >> 25;
-    chk = ((chk & 0x1ffffff) << 5) ^ v;
-    for (let i = 0; i < 5; i++) if ((b >> i) & 1) chk ^= GEN[i];
+window.addEventListener("keydown", (ev) => {
+  if (state.view !== "match" || state.matchMode !== "replay") return;
+  if (ev.key === "ArrowLeft") {
+    ev.preventDefault();
+    replayStep(-1);
+  } else if (ev.key === "ArrowRight") {
+    ev.preventDefault();
+    replayStep(1);
+  } else if (ev.key === " ") {
+    ev.preventDefault();
+    replayToggle();
   }
-  return chk;
-}
-function bech32HrpExpand(hrp) {
-  const ret = [];
-  for (let i = 0; i < hrp.length; i++) ret.push(hrp.charCodeAt(i) >> 5);
-  ret.push(0);
-  for (let i = 0; i < hrp.length; i++) ret.push(hrp.charCodeAt(i) & 31);
-  return ret;
-}
-function bech32CreateChecksum(hrp, data) {
-  const values = bech32HrpExpand(hrp).concat(data).concat([0, 0, 0, 0, 0, 0]);
-  const polymod = bech32Polymod(values) ^ 1;
-  const ret = [];
-  for (let i = 0; i < 6; i++) ret.push((polymod >> (5 * (5 - i))) & 31);
-  return ret;
-}
-function convertBits(data, fromBits, toBits, pad) {
-  let acc = 0, bits = 0;
-  const ret = [];
-  const maxv = (1 << toBits) - 1;
-  for (const v of data) {
-    acc = (acc << fromBits) | v;
-    bits += fromBits;
-    while (bits >= toBits) {
-      bits -= toBits;
-      ret.push((acc >> bits) & maxv);
-    }
-  }
-  if (pad && bits > 0) ret.push((acc << (toBits - bits)) & maxv);
-  return ret;
-}
+});
 
-async function renderChat(match) {
-  const bb = (cfg.bulletin || "").trim();
-  const postId = Number(match?.chat_post_id || 0);
-  if (!bb || !postId) {
-    $("chatList").innerHTML = `<div class="muted">no chat</div>`;
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) {
+    if (state.refreshTimer) clearTimeout(state.refreshTimer);
     return;
   }
-  $("chatList").innerHTML = `<div class="muted">loading...</div>`;
-  try {
-    const [postData, repliesData] = await Promise.all([
-      vmQuery(bb, "getPost", [String(postId)]),
-      vmQuery(bb, "getReplies", [String(postId)]),
-    ]);
-    const post = postData?.[0] ? decodePost(postData[0]) : null;
-    const replies = (repliesData || []).map(decodePost);
-    const all = [];
-    if (post) all.push(post);
-    all.push(...replies);
-    $("chatList").innerHTML = all.map((p) => {
-      const when = new Date((p.timestamp || 0) * 1000).toISOString();
-      return `
-        <div class="msg">
-          <div><span class="who mono">${escapeHtml(shortAddr(p.author))}</span> <span class="when">${escapeHtml(when)}</span></div>
-          <div class="body">${escapeHtml(p.body || "")}</div>
-        </div>
-      `;
-    }).join("") || `<div class="muted">no messages</div>`;
-  } catch (e) {
-    $("chatList").innerHTML = `<div class="bad">chat unavailable</div>`;
-  }
-}
+  if (state.view === "home") refreshAll();
+});
 
-// ============================================================
-// Utils
-// ============================================================
-function escapeHtml(s) {
-  return String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\"/g, "&quot;").replace(/'/g, "&#039;");
-}
-function escapeJs(s) {
-  return String(s || "").replace(/\\/g, "\\\\").replace(/'/g, "\\'");
-}
-
-// ============================================================
-// Boot
-// ============================================================
 loadCfg();
+bootstrapTabs();
 window.addEventListener("hashchange", route);
 route();
 refreshAll();
